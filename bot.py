@@ -1,9 +1,9 @@
+import os
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-from scanner import scan_wallet  # we will use your existing function
+from scanner import scan_wallet
 
-import os
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
@@ -23,17 +23,14 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        # Send image
         with open("position_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
 
-        # Optional text (keep or remove later)
         response = f"""
 ROI: {result['roi']}x
 Profit: {result['profit_sol']} SOL
 Value: {result['value_sol']} SOL
 """
-
         await update.message.reply_text(response)
 
     except Exception as e:
