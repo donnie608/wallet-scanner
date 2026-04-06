@@ -8,6 +8,7 @@ from image_card import create_card
 from PIL import Image, ImageDraw, ImageFont
 
 
+# ===== MINIMAL CARD =====
 def create_minimal_card(profit, roi):
     img = Image.new("RGB", (600, 300), (20, 20, 40))
     draw = ImageDraw.Draw(img)
@@ -32,12 +33,15 @@ def create_minimal_card(profit, roi):
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
+# ===== START =====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Bot is live 🚀")
+    await update.message.reply_text("Bot v3 LIVE ✅")
 
 
-# ✅ FULL CARD (RESTORED ORIGINAL LOGIC)
+# ===== FULL CARD =====
 async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("FULL TRIGGERED ✅")
+
     if not context.args:
         await update.message.reply_text("Usage: /scan WALLET")
         return
@@ -48,8 +52,8 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        # 🔥 ORIGINAL WORKING TOKEN LOGIC (no guessing)
-        token_name = result.get("token_name") or "Token"
+        # ✅ TOKEN (restore original working keys)
+        token_name = result.get("token_name", "Token")
         token_symbol = result.get("token_symbol")
 
         create_card(
@@ -74,8 +78,10 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
-# ✅ MINIMAL CARD (SHARE)
+# ===== MINIMAL CARD (SHARE) =====
 async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("MINIMAL TRIGGERED ✅")
+
     if not context.args:
         await update.message.reply_text("Usage: /share WALLET")
         return
@@ -98,12 +104,13 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
+# ===== MAIN =====
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
-    app.add_handler(CommandHandler("share", share))  # ✅ matches BotFather
+    app.add_handler(CommandHandler("share", share))
 
     print("Bot running...")
     app.run_polling()
