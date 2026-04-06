@@ -51,8 +51,8 @@ except:
         profit_font = ImageFont.load_default()
         small_font = ImageFont.load_default()
 
-    roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
-    profit_color = (0, 255, 120) if profit >= 0 else (255, 80, 80)
+        roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
+        profit_color = (0, 255, 120) if profit >= 0 else (255, 80, 80)
 
     # Header
     header_text = f"{token_name} (${token_symbol})"
