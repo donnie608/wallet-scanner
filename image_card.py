@@ -112,11 +112,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     if token_symbol:
         draw.text((40, 80), f"${token_symbol}", fill=(180, 200, 255), font=symbol_font)
 
-    if sell_count == 0:
-        activity_text = f"{buy_count} Buys • No Sells"
-    else:
-        activity_text = f"{buy_count} Buys • {sell_count} Sells"
-
+    activity_text = f"{buy_count} Buys • {sell_count} Sells" if sell_count else f"{buy_count} Buys • No Sells"
     draw.text((40, 110), f"{wallet_short}   {activity_text}", fill=(200, 200, 220), font=small_font)
 
     draw.line((40, 140, width - 40, 140), fill=(120, 120, 160), width=2)
@@ -144,7 +140,6 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     pill_color = (0, 200, 100) if roi > 1 else (220, 60, 60) if roi < 1 else (40, 40, 40)
 
     draw.rounded_rectangle((pill_x, pill_y, pill_x + pill_w, pill_y + pill_h), radius=35, fill=pill_color)
-
     draw.text((pill_x + 65, pill_y + 8), "ROI", fill=(255, 255, 255), font=label_font)
 
     draw_bold_text(draw, (pill_x + 40, pill_y + 28), f"{roi_str}x", roi_font, (255, 255, 255))
