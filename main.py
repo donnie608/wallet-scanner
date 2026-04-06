@@ -36,26 +36,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Bot is live 🚀")
 
 
+# ✅ FULL CARD
 async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Usage: /scan WALLET [minimal]")
+        await update.message.reply_text("Usage: /scan WALLET")
         return
 
     wallet = context.args[0]
-
-    # 🔥 FIXED MODE DETECTION (robust)
-    mode = "full"
-    if len(context.args) > 1:
-        arg = context.args[1].strip().lower()
-        if "minimal" in arg:
-            mode = "minimal"
-
     await update.message.reply_text("Scanning... ⏳")
 
     try:
         result = scan_wallet(wallet)
 
-        # ✅ CORRECT KEY MAPPING
         token_name = result.get("token_name") or result.get("name") or "Token"
         token_symbol = result.get("token_symbol") or result.get("symbol")
 
@@ -70,33 +62,47 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         sol_price = result.get("sol_price_usd", 0)
 
-        # 🔥 HARD SPLIT (no bleed between modes)
-        if mode == "minimal":
-            create_minimal_card(profit, roi)
-        else:
-            create_card(
-                token_name,
-                wallet,
-                tokens,
-                cost,
-                value,
-                profit,
-                roi,
-                logo_path=result.get("logo_path"),
-                token_symbol=token_symbol,
-                buy_count=buy_count,
-                sell_count=sell_count,
-                sol_price_usd=sol_price
-            )
+        create_card(
+            token_name,
+            wallet,
+            tokens,
+            cost,
+            value,
+            profit,
+            roi,
+            logo_path=result.get("logo_path"),
+            token_symbol=token_symbol,
+            buy_count=buy_count,
+            sell_count=sell_count,
+            sol_price_usd=sol_price
+        )
 
         with open("position_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
 
-        await update.message.reply_text(
-            f"ROI: {roi}x\n"
-            f"Profit: {profit} SOL\n"
-            f"Value: {value} SOL"
-        )
+    except Exception as e:
+        await update.message.reply_text(f"Error: {str(e)}")
+
+
+# ✅ MINIMAL CARD (NEW COMMAND)
+async def scanminimal(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        await update.message.reply_text("Usage: /scanminimal WALLET")
+        return
+
+    wallet = context.args[0]
+    await update.message.reply_text("Scanning... ⏳")
+
+    try:
+        result = scan_wallet(wallet)
+
+        profit = result.get("profit_sol", 0)
+        roi = result.get("roi_multiple", 1)
+
+        create_minimal_card(profit, roi)
+
+        with open("position_card.png", "rb") as img:
+            await update.message.reply_photo(photo=img)
 
     except Exception as e:
         await update.message.reply_text(f"Error: {str(e)}")
@@ -107,6 +113,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
+    app.add_handler(CommandHandler("scanminimal", scanminimal))  # ✅ NEW
 
     print("Bot running...")
     app.run_polling()
