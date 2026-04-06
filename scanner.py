@@ -232,9 +232,17 @@ def scan_wallet(wallet,):
     print("\n--- CARD GENERATED ---")
     print("Saved as position_card.png\n")
 
-    return {
-        "roi": round(roi_multiple, 2),
-        "profit_sol": round(unrealized_profit, 4),
-        "value_sol": round(current_value_sol, 4)
-    }
+   return {
+    "token_name": token_name,
+    "token_symbol": token_symbol,
+    "net_position": round(net_position, 2),
+    "cost_sol": round(sol_spent, 4),
+    "value_sol": round(current_value_sol, 4),
+    "profit_sol": round(unrealized_profit, 4),
+    "roi_multiple": round(roi_multiple, 2),
+    "buys": buy_count,
+    "sells": sell_count,
+    "sol_price_usd": sol_price_usd,
+    "logo_path": logo_path
+}
 
