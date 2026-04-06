@@ -232,7 +232,7 @@ def scan_wallet(wallet,):
     print("\n--- CARD GENERATED ---")
     print("Saved as position_card.png\n")
 
-      return {
+    return {
         "token_name": token_name,
         "token_symbol": token_symbol,
         "net_position": round(net_position, 2),
