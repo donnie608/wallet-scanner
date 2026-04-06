@@ -29,30 +29,30 @@ def create_minimal_card(profit, roi, token_name, token_symbol, logo_path, sol_pr
         draw.line((0, y, width, y), fill=(r, g, b))
 
     # ===== ROI GLOW =====
-glow = Image.new("RGBA", (width + 100, height + 100), (0, 0, 0, 0))
-glow_draw = ImageDraw.Draw(glow)
+    glow = Image.new("RGBA", (width + 100, height + 100), (0, 0, 0, 0))
+    glow_draw = ImageDraw.Draw(glow)
 
-glow_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
+    glow_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
 
-glow_draw.ellipse(
-    (200, 120, width - 200, height - 120),
-    fill=(*glow_color, 120)
-)
+    glow_draw.ellipse(
+        (200, 120, width - 200, height - 120),
+        fill=(*glow_color, 120)
+    )
 
-glow = glow.filter(ImageFilter.GaussianBlur(60))
-img.paste(glow, (-50, -50), glow)
+    glow = glow.filter(ImageFilter.GaussianBlur(60))
+    img.paste(glow, (-50, -50), glow)
 
-try:
+    try:
         roi_font = ImageFont.truetype(font_path, 90)
         profit_font = ImageFont.truetype(font_path, 36)
         small_font = ImageFont.truetype(font_path, 22)
-except:
+    except:
         roi_font = ImageFont.load_default()
         profit_font = ImageFont.load_default()
         small_font = ImageFont.load_default()
 
-        roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
-        profit_color = (0, 255, 120) if profit >= 0 else (255, 80, 80)
+    roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
+    profit_color = (0, 255, 120) if profit >= 0 else (255, 80, 80)
 
     # Header
     header_text = f"{token_name} (${token_symbol})"
@@ -73,31 +73,31 @@ except:
         pass
 
     # ===== ROI (CENTERED HERO) =====
-roi_text = f"{roi:.2f}x"
+    roi_text = f"{roi:.2f}x"
 
-bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
-text_w = bbox[2] - bbox[0]
+    bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
+    text_w = bbox[2] - bbox[0]
 
-draw.text(
-    ((width - text_w) // 2, height // 2 - 90),
-    roi_text,
-    fill=roi_color,
-    font=roi_font
-)
+    draw.text(
+        ((width - text_w) // 2, height // 2 - 90),
+        roi_text,
+        fill=roi_color,
+        font=roi_font
+    )
 
     # ===== PROFIT CENTERED =====
-profit_usd = profit * sol_price_usd
-profit_text = f"{'+' if profit >= 0 else ''}{profit:.2f} SOL (${profit_usd:.2f})"
+    profit_usd = profit * sol_price_usd
+    profit_text = f"{'+' if profit >= 0 else ''}{profit:.2f} SOL (${profit_usd:.2f})"
 
-bbox = draw.textbbox((0, 0), profit_text, font=profit_font)
-text_w = bbox[2] - bbox[0]
+    bbox = draw.textbbox((0, 0), profit_text, font=profit_font)
+    text_w = bbox[2] - bbox[0]
 
-draw.text(
-    ((width - text_w) // 2, height // 2 + 30),
-    profit_text,
-    fill=profit_color,
-    font=profit_font
-)
+    draw.text(
+        ((width - text_w) // 2, height // 2 + 30),
+        profit_text,
+        fill=profit_color,
+        font=profit_font
+    )
 
     draw.text((width//2 - 160, height//2 + 20), profit_text, fill=profit_color, font=profit_font)
 
@@ -133,7 +133,6 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        # 🔥 ONLY DEBUG LINE (THIS IS THE POINT OF THIS STEP)
         print("DEBUG RESULT:", result)
 
         token_name = result.get("token_name", "Token")
@@ -185,6 +184,7 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             result.get("logo_path"),
             result.get("sol_price_usd", 0)
         )
+
         with open("position_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
 
