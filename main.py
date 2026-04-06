@@ -35,11 +35,11 @@ def create_minimal_card(profit, roi, token_name, token_symbol, logo_path, sol_pr
     glow_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
 
     glow_draw.ellipse(
-        (200, 120, width - 200, height - 120),
+        (250, 160, width - 250, height - 160),
         fill=(*glow_color, 120)
     )
 
-    glow = glow.filter(ImageFilter.GaussianBlur(60))
+    glow = glow.filter(ImageFilter.GaussianBlur(35))
     img.paste(glow, (-50, -50), glow)
 
     try:
@@ -78,6 +78,14 @@ def create_minimal_card(profit, roi, token_name, token_symbol, logo_path, sol_pr
     bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
     text_w = bbox[2] - bbox[0]
 
+    # Shadow
+    draw.text(
+        ((width - text_w) // 2 + 2, height // 2 - 88),
+        roi_text,
+        fill=(0, 0, 0),
+        font=roi_font
+    )
+
     draw.text(
         ((width - text_w) // 2, height // 2 - 90),
         roi_text,
@@ -98,8 +106,6 @@ def create_minimal_card(profit, roi, token_name, token_symbol, logo_path, sol_pr
         fill=profit_color,
         font=profit_font
     )
-
-    draw.text((width//2 - 160, height//2 + 20), profit_text, fill=profit_color, font=profit_font)
 
     # Brand logo
     try:
