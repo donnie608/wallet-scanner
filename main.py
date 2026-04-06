@@ -3,7 +3,31 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 from scanner import scan_wallet
-from image_card import create_card, create_minimal_card
+from image_card import create_card
+
+# ✅ minimal inline (NO new file, NO risk)
+from PIL import Image, ImageDraw, ImageFont
+
+def create_minimal_card(profit, roi):
+    img = Image.new("RGB", (600, 300), (20, 20, 40))
+    draw = ImageDraw.Draw(img)
+
+    try:
+        font_big = ImageFont.truetype("Inter.ttf", 110)
+        font_small = ImageFont.truetype("Inter.ttf", 40)
+    except:
+        font_big = ImageFont.load_default()
+        font_small = ImageFont.load_default()
+
+    roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
+    profit_color = (0, 255, 120) if profit >= 0 else (255, 80, 80)
+
+    draw.text((120, 60), f"{roi:.2f}x", fill=roi_color, font=font_big)
+    draw.text((140, 200), f"{'+' if profit >= 0 else ''}{profit:.2f} SOL",
+              fill=profit_color, font=font_small)
+
+    img.save("position_card.png")
+
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -25,16 +49,11 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        # SAFE KEY HANDLING
         token_name = result.get("token_name") or result.get("name") or "Token"
         token_symbol = result.get("token_symbol") or result.get("symbol")
 
-        # 🔥 MODE SWITCH (CORRECT WAY)
         if mode == "minimal":
-            create_minimal_card(
-                result.get("profit_sol", 0),
-                result.get("roi", 1)
-            )
+            create_minimal_card(result.get("profit_sol", 0), result.get("roi", 1))
         else:
             create_card(
                 token_name,
@@ -51,17 +70,14 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 sol_price_usd=result.get("sol_price_usd", 0)
             )
 
-        # SEND IMAGE
         with open("position_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
 
-        # TEXT RESPONSE
-        response = f"""
-ROI: {result.get('roi', 0)}x
-Profit: {result.get('profit_sol', 0)} SOL
-Value: {result.get('value_sol', 0)} SOL
-"""
-        await update.message.reply_text(response)
+        await update.message.reply_text(
+            f"ROI: {result.get('roi', 0)}x\n"
+            f"Profit: {result.get('profit_sol', 0)} SOL\n"
+            f"Value: {result.get('value_sol', 0)} SOL"
+        )
 
     except Exception as e:
         await update.message.reply_text(f"Error: {str(e)}")
