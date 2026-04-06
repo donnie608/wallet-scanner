@@ -8,23 +8,74 @@ from image_card import create_card
 from PIL import Image, ImageDraw, ImageFont
 
 
-def create_minimal_card(profit, roi):
-    img = Image.new("RGB", (600, 300), (20, 20, 40))
+def create_minimal_card(profit, roi, token_name, token_symbol, logo_path, sol_price_usd):
+    from PIL import Image, ImageDraw, ImageFont
+    import os
+
+    width, height = 700, 400
+
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    font_path = os.path.join(BASE_DIR, "Inter.ttf")
+    brand_logo_path = os.path.join(BASE_DIR, "logo.png")
+
+    img = Image.new("RGBA", (width, height))
     draw = ImageDraw.Draw(img)
 
+    # Gradient background
+    for y in range(height):
+        r = int(40 + (y / height) * 40)
+        g = int(20 + (y / height) * 20)
+        b = int(90 + (y / height) * 80)
+        draw.line((0, y, width, y), fill=(r, g, b))
+
     try:
-        font_big = ImageFont.truetype("Inter.ttf", 110)
-        font_small = ImageFont.truetype("Inter.ttf", 40)
+        roi_font = ImageFont.truetype(font_path, 90)
+        profit_font = ImageFont.truetype(font_path, 36)
+        small_font = ImageFont.truetype(font_path, 22)
     except:
-        font_big = ImageFont.load_default()
-        font_small = ImageFont.load_default()
+        roi_font = ImageFont.load_default()
+        profit_font = ImageFont.load_default()
+        small_font = ImageFont.load_default()
 
     roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
     profit_color = (0, 255, 120) if profit >= 0 else (255, 80, 80)
 
-    draw.text((120, 60), f"{roi:.2f}x", fill=roi_color, font=font_big)
-    draw.text((140, 200), f"{'+' if profit >= 0 else ''}{profit:.2f} SOL",
-              fill=profit_color, font=font_small)
+    # Header
+    header_text = f"{token_name} (${token_symbol})"
+    draw.text((30, 30), header_text, fill=(255, 255, 255), font=small_font)
+
+    # Token logo
+    try:
+        if logo_path and os.path.exists(logo_path):
+            token_logo = Image.open(logo_path).convert("RGBA")
+            token_logo = token_logo.resize((80, 80))
+
+            mask = Image.new("L", (80, 80), 0)
+            ImageDraw.Draw(mask).ellipse((0, 0, 80, 80), fill=255)
+            token_logo.putalpha(mask)
+
+            img.paste(token_logo, (width - 100, 20), token_logo)
+    except:
+        pass
+
+    # ROI
+    roi_text = f"{roi:.2f}x"
+    draw.text((width//2 - 120, height//2 - 80), roi_text, fill=roi_color, font=roi_font)
+
+    # Profit + USD
+    profit_usd = profit * sol_price_usd
+    profit_text = f"{'+' if profit >= 0 else ''}{profit:.2f} SOL (${profit_usd:.2f})"
+
+    draw.text((width//2 - 160, height//2 + 20), profit_text, fill=profit_color, font=profit_font)
+
+    # Brand logo
+    try:
+        if os.path.exists(brand_logo_path):
+            brand_logo = Image.open(brand_logo_path).convert("RGBA")
+            brand_logo = brand_logo.resize((120, 120))
+            img.paste(brand_logo, (width - 140, height - 140), brand_logo)
+    except:
+        pass
 
     img.save("position_card.png")
 
@@ -93,8 +144,14 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
         profit = result.get("profit_sol", 0)
         roi = result.get("roi_multiple", 1)
 
-        create_minimal_card(profit, roi)
-
+        create_minimal_card(
+            profit,
+            roi,
+            result.get("token_name"),
+            result.get("token_symbol"),
+            result.get("logo_path"),
+            result.get("sol_price_usd", 0)
+        )
         with open("position_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
 
