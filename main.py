@@ -127,7 +127,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
-    app.add_handler(CommandHandler("scanminimal", scanminimal))
+    app.add_handler(CommandHandler(["scanminimal", "scan_minimal", "scan-minimal"], scanminimal))
 
     print("Bot running...")
     app.run_polling()
