@@ -8,7 +8,6 @@ from image_card import create_card
 from PIL import Image, ImageDraw, ImageFont
 
 
-# ===== MINIMAL CARD =====
 def create_minimal_card(profit, roi):
     img = Image.new("RGB", (600, 300), (20, 20, 40))
     draw = ImageDraw.Draw(img)
@@ -33,12 +32,10 @@ def create_minimal_card(profit, roi):
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
-# ===== START =====
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Bot v3 LIVE ✅")
+    await update.message.reply_text("Bot v4 DEBUG 🔍")
 
 
-# ===== FULL CARD =====
 async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("FULL TRIGGERED ✅")
 
@@ -52,7 +49,9 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        # ✅ TOKEN (restore original working keys)
+        # 🔥 ONLY DEBUG LINE (THIS IS THE POINT OF THIS STEP)
+        print("DEBUG RESULT:", result)
+
         token_name = result.get("token_name", "Token")
         token_symbol = result.get("token_symbol")
 
@@ -78,7 +77,6 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
-# ===== MINIMAL CARD (SHARE) =====
 async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("MINIMAL TRIGGERED ✅")
 
@@ -104,7 +102,6 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
-# ===== MAIN =====
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
