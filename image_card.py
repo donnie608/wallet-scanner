@@ -30,14 +30,12 @@ def reduce_opacity(img, opacity):
 
 
 # =========================
-# ORIGINAL FULL CARD (UNCHANGED)
+# FULL CARD (ORIGINAL)
 # =========================
-def create_card(
-    token_name, wallet, tokens, cost, value, profit, roi,
-    logo_path=None, token_symbol=None,
-    buy_count=0, sell_count=0,
-    sol_price_usd=0
-):
+def create_card(token_name, wallet, tokens, cost, value, profit, roi,
+                logo_path=None, token_symbol=None,
+                buy_count=0, sell_count=0,
+                sol_price_usd=0):
 
     tokens_str = format_compact(tokens)
     roi_str = format_number(roi, 2)
@@ -56,14 +54,12 @@ def create_card(
 
     roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80) if roi < 1 else (120, 120, 120)
 
-    # GLOW
     glow = Image.new("RGBA", (width + 80, height + 80), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow)
     glow_draw.rounded_rectangle((40, 40, width + 40, height + 40), radius=50, fill=(*roi_color, 255))
     glow = glow.filter(ImageFilter.GaussianBlur(20))
     img.paste(glow, (-40, -40), glow)
 
-    # GRADIENT
     card = Image.new("RGBA", (width, height))
     draw_card = ImageDraw.Draw(card)
 
@@ -94,45 +90,16 @@ def create_card(
         small_font = ImageFont.load_default()
         roi_font = ImageFont.load_default()
 
-    # TOKEN LOGO
-    try:
-        size = 120
-        x = width - size - 20
-        y = 20
-
-        if logo_path and os.path.exists(logo_path):
-            logo = Image.open(logo_path).convert("RGBA")
-        else:
-            logo = Image.open(logo_file).convert("RGBA")
-
-        logo = logo.resize((size, size), Image.LANCZOS)
-
-        mask = Image.new("L", (size, size), 0)
-        ImageDraw.Draw(mask).ellipse((0, 0, size, size), fill=255)
-        logo.putalpha(mask)
-
-        img.paste(logo, (x, y), logo)
-
-    except:
-        pass
-
-    # HEADER
     draw.text((40, 30), token_name, fill=(255, 255, 255), font=title_font)
 
     if token_symbol:
         draw.text((40, 80), f"${token_symbol}", fill=(180, 200, 255), font=symbol_font)
 
-    if sell_count == 0:
-        activity_text = f"{buy_count} Buys • No Sells"
-    else:
-        activity_text = f"{buy_count} Buys • {sell_count} Sells"
-
-    combined_text = f"{wallet_short}   {activity_text}"
-    draw.text((40, 110), combined_text, fill=(200, 200, 220), font=small_font)
+    activity_text = f"{buy_count} Buys • {sell_count} Sells" if sell_count else f"{buy_count} Buys • No Sells"
+    draw.text((40, 110), f"{wallet_short}   {activity_text}", fill=(200, 200, 220), font=small_font)
 
     draw.line((40, 140, width - 40, 140), fill=(120, 120, 160), width=2)
 
-    # VALUES
     cost_usd = cost * sol_price_usd
     value_usd = value * sol_price_usd
     profit_usd = profit * sol_price_usd
@@ -149,37 +116,21 @@ def create_card(
     draw.text((400, 270), "Profit (SOL)", fill=(200, 200, 220), font=label_font)
     draw.text((400, 305), f"{profit:.4f} SOL (${profit_usd:.2f})", fill=profit_color, font=value_font)
 
-    # ROI PILL
     pill_w, pill_h = 180, 70
     pill_x = (width - pill_w) // 2
     pill_y = 370
 
     pill_color = (0, 200, 100) if roi > 1 else (220, 60, 60) if roi < 1 else (40, 40, 40)
-
     draw.rounded_rectangle((pill_x, pill_y, pill_x + pill_w, pill_y + pill_h), radius=35, fill=pill_color)
+
     draw.text((pill_x + 65, pill_y + 8), "ROI", fill=(255, 255, 255), font=label_font)
-
-    roi_value = f"{roi_str}x"
-    draw_bold_text(draw, (pill_x + 40, pill_y + 28), roi_value, roi_font, (255, 255, 255))
-
-    # BRAND LOGO
-    try:
-        brand_logo = Image.open(logo_file).convert("RGBA")
-        brand_logo = brand_logo.resize((150, 150), Image.LANCZOS)
-        brand_logo = reduce_opacity(brand_logo, 0.85)
-
-        x = width - brand_logo.size[0] - 30
-        y = height - brand_logo.size[1] + 25
-
-        img.paste(brand_logo, (x, y), brand_logo)
-    except:
-        pass
+    draw_bold_text(draw, (pill_x + 40, pill_y + 28), f"{roi_str}x", roi_font, (255, 255, 255))
 
     img.save(output_path)
 
 
 # =========================
-# MINIMAL CARD (SEPARATE)
+# MINIMAL CARD
 # =========================
 def create_minimal_card(profit, roi):
 
@@ -193,10 +144,7 @@ def create_minimal_card(profit, roi):
     draw = ImageDraw.Draw(img)
 
     for y in range(height):
-        r = int(50 + (y / height) * 60)
-        g = int(20 + (y / height) * 30)
-        b = int(100 + (y / height) * 120)
-        draw.line((0, y, width, y), fill=(r, g, b))
+        draw.line((0, y, width, y), fill=(50, 20 + y//5, 100 + y//3))
 
     try:
         roi_font = ImageFont.truetype(font_path, 110)
