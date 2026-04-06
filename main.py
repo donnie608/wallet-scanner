@@ -5,7 +5,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from scanner import scan_wallet
 from image_card import create_card
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 
 def create_minimal_card(profit, roi, token_name, token_symbol, logo_path, sol_price_usd):
@@ -28,6 +28,20 @@ def create_minimal_card(profit, roi, token_name, token_symbol, logo_path, sol_pr
         b = int(90 + (y / height) * 80)
         draw.line((0, y, width, y), fill=(r, g, b))
 
+    # ===== ROI GLOW =====
+glow = Image.new("RGBA", (width + 100, height + 100), (0, 0, 0, 0))
+glow_draw = ImageDraw.Draw(glow)
+
+glow_color = (0, 255, 120) if roi > 1 else (255, 80, 80)
+
+glow_draw.ellipse(
+    (200, 120, width - 200, height - 120),
+    fill=(*glow_color, 120)
+)
+
+glow = glow.filter(ImageFilter.GaussianBlur(60))
+img.paste(glow, (-50, -50), glow)
+  
     try:
         roi_font = ImageFont.truetype(font_path, 90)
         profit_font = ImageFont.truetype(font_path, 36)
@@ -58,13 +72,32 @@ def create_minimal_card(profit, roi, token_name, token_symbol, logo_path, sol_pr
     except:
         pass
 
-    # ROI
-    roi_text = f"{roi:.2f}x"
-    draw.text((width//2 - 120, height//2 - 80), roi_text, fill=roi_color, font=roi_font)
+    # ===== ROI (CENTERED HERO) =====
+roi_text = f"{roi:.2f}x"
 
-    # Profit + USD
-    profit_usd = profit * sol_price_usd
-    profit_text = f"{'+' if profit >= 0 else ''}{profit:.2f} SOL (${profit_usd:.2f})"
+bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
+text_w = bbox[2] - bbox[0]
+
+draw.text(
+    ((width - text_w) // 2, height // 2 - 90),
+    roi_text,
+    fill=roi_color,
+    font=roi_font
+)
+
+    # ===== PROFIT CENTERED =====
+profit_usd = profit * sol_price_usd
+profit_text = f"{'+' if profit >= 0 else ''}{profit:.2f} SOL (${profit_usd:.2f})"
+
+bbox = draw.textbbox((0, 0), profit_text, font=profit_font)
+text_w = bbox[2] - bbox[0]
+
+draw.text(
+    ((width - text_w) // 2, height // 2 + 30),
+    profit_text,
+    fill=profit_color,
+    font=profit_font
+)
 
     draw.text((width//2 - 160, height//2 + 20), profit_text, fill=profit_color, font=profit_font)
 
