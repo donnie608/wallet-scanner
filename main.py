@@ -33,13 +33,11 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Bot v2 live 🚀")
+    await update.message.reply_text("Bot is live 🚀")
 
 
-# ✅ FULL CARD
+# ✅ FULL CARD (RESTORED ORIGINAL LOGIC)
 async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("FULL TRIGGERED ✅")
-
     if not context.args:
         await update.message.reply_text("Usage: /scan WALLET")
         return
@@ -50,45 +48,23 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        token_data = result.get("token", {})
-
-        token_name = (
-            result.get("token_name")
-            or token_data.get("name")
-            or result.get("name")
-            or "Token"
-        )
-
-        token_symbol = (
-            result.get("token_symbol")
-            or token_data.get("symbol")
-            or result.get("symbol")
-        )
-
-        tokens = result.get("net_position", 0)
-        cost = result.get("cost_sol", 0)
-        value = result.get("value_sol", 0)
-        profit = result.get("profit_sol", 0)
-        roi = result.get("roi_multiple", 1)
-
-        buy_count = result.get("buys", 0)
-        sell_count = result.get("sells", 0)
-
-        sol_price = result.get("sol_price_usd", 0)
+        # 🔥 ORIGINAL WORKING TOKEN LOGIC (no guessing)
+        token_name = result.get("token_name") or "Token"
+        token_symbol = result.get("token_symbol")
 
         create_card(
             token_name,
             wallet,
-            tokens,
-            cost,
-            value,
-            profit,
-            roi,
+            result.get("net_position", 0),
+            result.get("cost_sol", 0),
+            result.get("value_sol", 0),
+            result.get("profit_sol", 0),
+            result.get("roi_multiple", 1),
             logo_path=result.get("logo_path"),
             token_symbol=token_symbol,
-            buy_count=buy_count,
-            sell_count=sell_count,
-            sol_price_usd=sol_price
+            buy_count=result.get("buys", 0),
+            sell_count=result.get("sells", 0),
+            sol_price_usd=result.get("sol_price_usd", 0)
         )
 
         with open("position_card.png", "rb") as img:
@@ -98,16 +74,14 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
-# ✅ MINIMAL CARD (DEBUG PROTECTED)
-async def scanminimal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("MINIMAL TRIGGERED ✅")
-
+# ✅ MINIMAL CARD (SHARE)
+async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
-        await update.message.reply_text("Usage: /scanminimal WALLET")
+        await update.message.reply_text("Usage: /share WALLET")
         return
 
     wallet = context.args[0]
-    await update.message.reply_text("Scanning minimal... ⏳")
+    await update.message.reply_text("Scanning... ⏳")
 
     try:
         result = scan_wallet(wallet)
@@ -129,7 +103,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
-    app.add_handler(CommandHandler("share", scanminimal))
+    app.add_handler(CommandHandler("share", share))  # ✅ matches BotFather
 
     print("Bot running...")
     app.run_polling()
