@@ -41,8 +41,8 @@ glow_draw.ellipse(
 
 glow = glow.filter(ImageFilter.GaussianBlur(60))
 img.paste(glow, (-50, -50), glow)
-  
-    try:
+
+try:
         roi_font = ImageFont.truetype(font_path, 90)
         profit_font = ImageFont.truetype(font_path, 36)
         small_font = ImageFont.truetype(font_path, 22)
