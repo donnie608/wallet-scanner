@@ -33,11 +33,13 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Bot is live 🚀")
+    await update.message.reply_text("Bot v2 live 🚀")
 
 
 # ✅ FULL CARD
 async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("FULL TRIGGERED ✅")
+
     if not context.args:
         await update.message.reply_text("Usage: /scan WALLET")
         return
@@ -48,7 +50,6 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        # 🔥 ROBUST TOKEN EXTRACTION (handles all formats)
         token_data = result.get("token", {})
 
         token_name = (
@@ -64,7 +65,6 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             or result.get("symbol")
         )
 
-        # ✅ CORRECT KEY MAPPING
         tokens = result.get("net_position", 0)
         cost = result.get("cost_sol", 0)
         value = result.get("value_sol", 0)
@@ -98,14 +98,16 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
-# ✅ MINIMAL CARD
+# ✅ MINIMAL CARD (DEBUG PROTECTED)
 async def scanminimal(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("MINIMAL TRIGGERED ✅")
+
     if not context.args:
         await update.message.reply_text("Usage: /scanminimal WALLET")
         return
 
     wallet = context.args[0]
-    await update.message.reply_text("Scanning... ⏳")
+    await update.message.reply_text("Scanning minimal... ⏳")
 
     try:
         result = scan_wallet(wallet)
@@ -127,7 +129,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
-    app.add_handler(CommandHandler(["scanminimal", "scan_minimal", "scan-minimal"], scanminimal))
+    app.add_handler(CommandHandler("scanminimal", scanminimal))
 
     print("Bot running...")
     app.run_polling()
