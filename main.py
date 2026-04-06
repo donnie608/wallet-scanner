@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 from scanner import scan_wallet
-from image_card import create_card
+from image_card import create_card, create_minimal_card
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -25,29 +25,37 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        # ✅ SAFE KEY HANDLING
+        # SAFE KEY HANDLING
         token_name = result.get("token_name") or result.get("name") or "Token"
         token_symbol = result.get("token_symbol") or result.get("symbol")
 
-        create_card(
-            token_name,
-            wallet,
-            result.get("tokens", 0),
-            result.get("cost_sol", 0),
-            result.get("value_sol", 0),
-            result.get("profit_sol", 0),
-            result.get("roi", 1),
-            logo_path=result.get("logo_path"),
-            token_symbol=token_symbol,
-            buy_count=result.get("buy_count", 0),
-            sell_count=result.get("sell_count", 0),
-            sol_price_usd=result.get("sol_price_usd", 0),
-            mode=mode
-        )
+        # 🔥 MODE SWITCH (CORRECT WAY)
+        if mode == "minimal":
+            create_minimal_card(
+                result.get("profit_sol", 0),
+                result.get("roi", 1)
+            )
+        else:
+            create_card(
+                token_name,
+                wallet,
+                result.get("tokens", 0),
+                result.get("cost_sol", 0),
+                result.get("value_sol", 0),
+                result.get("profit_sol", 0),
+                result.get("roi", 1),
+                logo_path=result.get("logo_path"),
+                token_symbol=token_symbol,
+                buy_count=result.get("buy_count", 0),
+                sell_count=result.get("sell_count", 0),
+                sol_price_usd=result.get("sol_price_usd", 0)
+            )
 
+        # SEND IMAGE
         with open("position_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
 
+        # TEXT RESPONSE
         response = f"""
 ROI: {result.get('roi', 0)}x
 Profit: {result.get('profit_sol', 0)} SOL
