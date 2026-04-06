@@ -48,9 +48,23 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
-        token_name = result.get("token_name") or result.get("name") or "Token"
-        token_symbol = result.get("token_symbol") or result.get("symbol")
+        # 🔥 ROBUST TOKEN EXTRACTION (handles all formats)
+        token_data = result.get("token", {})
 
+        token_name = (
+            result.get("token_name")
+            or token_data.get("name")
+            or result.get("name")
+            or "Token"
+        )
+
+        token_symbol = (
+            result.get("token_symbol")
+            or token_data.get("symbol")
+            or result.get("symbol")
+        )
+
+        # ✅ CORRECT KEY MAPPING
         tokens = result.get("net_position", 0)
         cost = result.get("cost_sol", 0)
         value = result.get("value_sol", 0)
@@ -84,7 +98,7 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
-# ✅ MINIMAL CARD (NEW COMMAND)
+# ✅ MINIMAL CARD
 async def scanminimal(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not context.args:
         await update.message.reply_text("Usage: /scanminimal WALLET")
@@ -113,7 +127,7 @@ def main():
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
-    app.add_handler(CommandHandler("scanminimal", scanminimal))  # ✅ NEW
+    app.add_handler(CommandHandler("scanminimal", scanminimal))
 
     print("Bot running...")
     app.run_polling()
