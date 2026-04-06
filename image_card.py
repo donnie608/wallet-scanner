@@ -23,11 +23,11 @@ def draw_bold_text(draw, position, text, font, fill):
     draw.text((x+1, y+1), text, font=font, fill=fill)
 
 def reduce_opacity(img, opacity):
+    """Safely reduce opacity without breaking transparency"""
     alpha = img.split()[3]
     alpha = alpha.point(lambda p: int(p * opacity))
     img.putalpha(alpha)
     return img
-
 
 def create_card(token_name, wallet, tokens, cost, value, profit, roi,
                 logo_path=None, token_symbol=None,
@@ -38,6 +38,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     roi_str = format_number(roi, 2)
 
     wallet_short = wallet[:6] + "..." + wallet[-4:]
+
     profit_color = (0, 255, 120) if profit >= 0 else (255, 80, 80)
 
     width, height = 800, 450
@@ -51,12 +52,18 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
 
     roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80) if roi < 1 else (120, 120, 120)
 
+    # ===== CARD GLOW =====
     glow = Image.new("RGBA", (width + 80, height + 80), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow)
-    glow_draw.rounded_rectangle((40, 40, width + 40, height + 40), radius=50, fill=(*roi_color, 255))
+    glow_draw.rounded_rectangle(
+        (40, 40, width + 40, height + 40),
+        radius=50,
+        fill=(*roi_color, 255)
+    )
     glow = glow.filter(ImageFilter.GaussianBlur(20))
     img.paste(glow, (-40, -40), glow)
 
+    # ===== GRADIENT =====
     card = Image.new("RGBA", (width, height))
     draw_card = ImageDraw.Draw(card)
 
@@ -87,6 +94,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
         small_font = ImageFont.load_default()
         roi_font = ImageFont.load_default()
 
+    # ===== TOKEN LOGO (TOP RIGHT) =====
     try:
         size = 120
         x = width - size - 20
@@ -104,19 +112,27 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
         logo.putalpha(mask)
 
         img.paste(logo, (x, y), logo)
+
     except:
         pass
 
+    # ===== HEADER =====
     draw.text((40, 30), token_name, fill=(255, 255, 255), font=title_font)
 
     if token_symbol:
         draw.text((40, 80), f"${token_symbol}", fill=(180, 200, 255), font=symbol_font)
 
-    activity_text = f"{buy_count} Buys • {sell_count} Sells" if sell_count else f"{buy_count} Buys • No Sells"
-    draw.text((40, 110), f"{wallet_short}   {activity_text}", fill=(200, 200, 220), font=small_font)
+    if sell_count == 0:
+        activity_text = f"{buy_count} Buys • No Sells"
+    else:
+        activity_text = f"{buy_count} Buys • {sell_count} Sells"
+
+    combined_text = f"{wallet_short}   {activity_text}"
+    draw.text((40, 110), combined_text, fill=(200, 200, 220), font=small_font)
 
     draw.line((40, 140, width - 40, 140), fill=(120, 120, 160), width=2)
 
+    # ===== USD =====
     cost_usd = cost * sol_price_usd
     value_usd = value * sol_price_usd
     profit_usd = profit * sol_price_usd
@@ -133,26 +149,40 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     draw.text((400, 270), "Profit (SOL)", fill=(200, 200, 220), font=label_font)
     draw.text((400, 305), f"{profit:.4f} SOL (${profit_usd:.2f})", fill=profit_color, font=value_font)
 
+    # ===== ROI =====
     pill_w, pill_h = 180, 70
     pill_x = (width - pill_w) // 2
     pill_y = 370
 
     pill_color = (0, 200, 100) if roi > 1 else (220, 60, 60) if roi < 1 else (40, 40, 40)
 
-    draw.rounded_rectangle((pill_x, pill_y, pill_x + pill_w, pill_y + pill_h), radius=35, fill=pill_color)
+    draw.rounded_rectangle(
+        (pill_x, pill_y, pill_x + pill_w, pill_y + pill_h),
+        radius=35,
+        fill=pill_color
+    )
+
     draw.text((pill_x + 65, pill_y + 8), "ROI", fill=(255, 255, 255), font=label_font)
 
-    draw_bold_text(draw, (pill_x + 40, pill_y + 28), f"{roi_str}x", roi_font, (255, 255, 255))
+    roi_value = f"{roi_str}x"
+    draw_bold_text(draw, (pill_x + 40, pill_y + 28), roi_value, roi_font, (255, 255, 255))
 
+    # ===== BRAND LOGO (FIXED OPACITY + POSITION) =====
     try:
         brand_logo = Image.open(logo_file).convert("RGBA")
         brand_logo = brand_logo.resize((150, 150), Image.LANCZOS)
+
+        # 🔥 SAFE opacity (no black box)
         brand_logo = reduce_opacity(brand_logo, 0.85)
 
-        x = width - brand_logo.size[0] - 30
-        y = height - brand_logo.size[1] + 25
+        margin = 10
+        logo_w, logo_h = brand_logo.size
+
+        x = width - logo_w - margin - 20
+        y = height - logo_h - margin + 35
 
         img.paste(brand_logo, (x, y), brand_logo)
+
     except:
         pass
 
