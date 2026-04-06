@@ -25,16 +25,20 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = scan_wallet(wallet)
 
+        # ✅ SAFE KEY HANDLING
+        token_name = result.get("token_name") or result.get("name") or "Token"
+        token_symbol = result.get("token_symbol") or result.get("symbol")
+
         create_card(
-            result["token_name"],
+            token_name,
             wallet,
-            result["tokens"],
-            result["cost_sol"],
-            result["value_sol"],
-            result["profit_sol"],
-            result["roi"],
+            result.get("tokens", 0),
+            result.get("cost_sol", 0),
+            result.get("value_sol", 0),
+            result.get("profit_sol", 0),
+            result.get("roi", 1),
             logo_path=result.get("logo_path"),
-            token_symbol=result.get("token_symbol"),
+            token_symbol=token_symbol,
             buy_count=result.get("buy_count", 0),
             sell_count=result.get("sell_count", 0),
             sol_price_usd=result.get("sol_price_usd", 0),
@@ -45,9 +49,9 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_photo(photo=img)
 
         response = f"""
-ROI: {result['roi']}x
-Profit: {result['profit_sol']} SOL
-Value: {result['value_sol']} SOL
+ROI: {result.get('roi', 0)}x
+Profit: {result.get('profit_sol', 0)} SOL
+Value: {result.get('value_sol', 0)} SOL
 """
         await update.message.reply_text(response)
 
