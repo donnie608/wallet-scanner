@@ -46,7 +46,7 @@ try:
         roi_font = ImageFont.truetype(font_path, 90)
         profit_font = ImageFont.truetype(font_path, 36)
         small_font = ImageFont.truetype(font_path, 22)
-    except:
+except:
         roi_font = ImageFont.load_default()
         profit_font = ImageFont.load_default()
         small_font = ImageFont.load_default()
