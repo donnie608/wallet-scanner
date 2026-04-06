@@ -30,7 +30,7 @@ def reduce_opacity(img, opacity):
 
 
 # =========================
-# MINIMAL CARD
+# MINIMAL CARD (FIXED)
 # =========================
 def create_minimal_card(profit, roi):
 
@@ -41,19 +41,18 @@ def create_minimal_card(profit, roi):
     font_path = os.path.join(BASE_DIR, "Inter.ttf")
 
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-
     draw = ImageDraw.Draw(img)
 
     # Gradient background
     for y in range(height):
-        r = int(40 + (y / height) * 40)
-        g = int(20 + (y / height) * 20)
-        b = int(80 + (y / height) * 100)
+        r = int(50 + (y / height) * 60)
+        g = int(20 + (y / height) * 30)
+        b = int(100 + (y / height) * 120)
         draw.line((0, y, width, y), fill=(r, g, b))
 
     try:
-        roi_font = ImageFont.truetype(font_path, 90)
-        profit_font = ImageFont.truetype(font_path, 40)
+        roi_font = ImageFont.truetype(font_path, 110)
+        profit_font = ImageFont.truetype(font_path, 42)
     except:
         roi_font = ImageFont.load_default()
         profit_font = ImageFont.load_default()
@@ -64,13 +63,9 @@ def create_minimal_card(profit, roi):
     roi_text = f"{format_number(roi)}x"
     profit_text = f"{'+' if profit >= 0 else ''}{format_number(profit)} SOL"
 
-    # Center ROI
-    w, h = draw.textbbox((0, 0), roi_text, font=roi_font)[2:]
-    draw_bold_text(draw, ((width - w)//2, 60), roi_text, roi_font, roi_color)
-
-    # Profit below
-    w2, h2 = draw.textbbox((0, 0), profit_text, font=profit_font)[2:]
-    draw.text(((width - w2)//2, 170), profit_text, fill=profit_color, font=profit_font)
+    # Center manually (stable)
+    draw_bold_text(draw, (120, 70), roi_text, roi_font, roi_color)
+    draw.text((140, 200), profit_text, fill=profit_color, font=profit_font)
 
     img.save(output_path)
 
@@ -166,7 +161,7 @@ def create_full_card(token_name, wallet, tokens, cost, value, profit, roi,
 
 
 # =========================
-# MAIN ENTRY
+# ENTRY POINT
 # =========================
 def create_card(*args, mode="full", **kwargs):
     if mode == "minimal":
