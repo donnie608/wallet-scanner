@@ -1,6 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
-import math
 
 def format_number(n, decimals=2):
     return f"{n:,.{decimals}f}"
@@ -146,7 +145,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     img.save(output_path)
 
 # =========================
-# MINIMAL ROI CARD (UPDATED)
+# MINIMAL ROI CARD (FIXED FOR REAL)
 # =========================
 def create_minimal_card(token_name, profit, roi,
                         logo_path=None, token_symbol=None,
@@ -161,40 +160,41 @@ def create_minimal_card(token_name, profit, roi,
 
     roi_color = (0, 255, 180) if roi > 1 else (255, 80, 80)
 
+    # background
     draw_bg = ImageDraw.Draw(img)
     for y in range(height):
         draw_bg.line((0, y, width, y),
                      fill=(40 + y//6, 20 + y//12, 80 + y//3))
 
+    draw = ImageDraw.Draw(img)
+
     try:
         roi_font = ImageFont.truetype(font_path, 140)
-        sub_font = ImageFont.truetype(font_path, 42)
-        title_font = ImageFont.truetype(font_path, 56)  # 🔥 100% bigger
+        sub_font = ImageFont.truetype(font_path, 44)
+        title_font = ImageFont.truetype(font_path, 80)  # 🔥 BIG jump
     except:
         roi_font = ImageFont.load_default()
         sub_font = ImageFont.load_default()
         title_font = ImageFont.load_default()
 
-    draw = ImageDraw.Draw(img)
-
-    # ===== TITLE (BIGGER) =====
+    # ===== TITLE (VISIBLY BIGGER) =====
     title = f"{token_name} (${token_symbol})" if token_symbol else token_name
     draw.text((40, 30), title, font=title_font, fill=(220, 220, 255))
 
-    # ===== CENTER ROI PERFECTLY =====
+    # ===== ROI CENTER (REAL) =====
     roi_text = f"{roi:.2f}x"
     bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
-    text_w = bbox[2] - bbox[0]
-    text_h = bbox[3] - bbox[1]
+    roi_w = bbox[2] - bbox[0]
+    roi_h = bbox[3] - bbox[1]
 
-    center_x = (width - text_w) // 2
-    center_y = (height - text_h) // 2 - 20
+    roi_x = (width - roi_w) // 2
+    roi_y = (height - roi_h) // 2
 
     # glow
-    for r, alpha in [(8,80),(16,40),(30,20)]:
+    for r, alpha in [(6,100),(14,50),(28,25)]:
         glow = Image.new("RGBA", (width, height), (0,0,0,0))
         g = ImageDraw.Draw(glow)
-        g.text((center_x, center_y),
+        g.text((roi_x, roi_y),
                roi_text, font=roi_font,
                fill=(*roi_color, alpha))
         glow = glow.filter(ImageFilter.GaussianBlur(r))
@@ -203,19 +203,27 @@ def create_minimal_card(token_name, profit, roi,
     draw = ImageDraw.Draw(img)
 
     # shadow
-    draw.text((center_x, center_y+8),
-              roi_text, font=roi_font, fill=(0,0,0,120))
+    draw.text((roi_x, roi_y + 10),
+              roi_text, font=roi_font,
+              fill=(0,0,0,130))
 
-    # main
-    draw.text((center_x, center_y),
-              roi_text, font=roi_font, fill=(240,255,255))
+    # main ROI
+    draw.text((roi_x, roi_y),
+              roi_text, font=roi_font,
+              fill=(240,255,255))
 
-    # ===== PROFIT (MORE SPACING) =====
+    # ===== PROFIT (CENTERED + CLEAR GAP) =====
     profit_usd = profit * sol_price_usd
     profit_text = f"{profit:.2f} SOL (${profit_usd:.2f})"
 
+    p_bbox = draw.textbbox((0, 0), profit_text, font=sub_font)
+    p_w = p_bbox[2] - p_bbox[0]
+
+    profit_x = (width - p_w) // 2
+    profit_y = roi_y + roi_h + 70  # 🔥 VERY noticeable spacing
+
     draw.text(
-        (width//2 - 150, center_y + text_h + 40),  # 🔥 more spacing
+        (profit_x, profit_y),
         profit_text,
         font=sub_font,
         fill=roi_color
