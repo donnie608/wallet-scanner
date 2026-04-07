@@ -1,3 +1,4 @@
+print("MINIMAL CARD NEW VERSION RUNNING")
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 
