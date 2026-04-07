@@ -35,13 +35,12 @@ def create_minimal_card(token_name, profit, roi,
     else:
         roi_color = (120, 120, 120)
 
-    # ===== NEON BORDER (IMPROVED) =====
+    # ===== NEON BORDER =====
     border = Image.new("RGBA", (width, height), (0,0,0,0))
 
     margin = 12
     radius = 36
 
-    # OUTER GLOW (soft spread)
     for blur, alpha, expand in [
         (30, 40, 6),
         (20, 70, 4),
@@ -60,7 +59,6 @@ def create_minimal_card(token_name, profit, roi,
         temp = temp.filter(ImageFilter.GaussianBlur(blur))
         border = Image.alpha_composite(border, temp)
 
-    # SHARP INNER EDGE
     sharp = Image.new("RGBA", (width, height), (0,0,0,0))
     s_draw = ImageDraw.Draw(sharp)
 
@@ -72,7 +70,6 @@ def create_minimal_card(token_name, profit, roi,
     )
 
     border = Image.alpha_composite(border, sharp)
-
     img = Image.alpha_composite(img, border)
 
     draw = ImageDraw.Draw(img)
@@ -86,13 +83,30 @@ def create_minimal_card(token_name, profit, roi,
         sub_font = ImageFont.load_default()
         title_font = ImageFont.load_default()
 
-    # TITLE
+    # ===== TITLE (BOLD EFFECT) =====
     title = f"{token_name} (${token_symbol})" if token_symbol else token_name
     bbox = draw.textbbox((0,0), title, font=title_font)
-    draw.text(((width-(bbox[2]-bbox[0]))//2, 30),
-              title, font=title_font, fill=(200,200,220))
 
-    # ROI POSITION
+    tx = (width - (bbox[2]-bbox[0])) // 2
+    ty = 30
+
+    # fake bold (same method as full card)
+    for dx, dy in [(0,0),(1,0),(0,1),(1,1)]:
+        draw.text((tx+dx, ty+dy),
+                  title,
+                  font=title_font,
+                  fill=(220,220,255))
+
+    # ===== SEPARATOR LINE =====
+    line_y = ty + (bbox[3]-bbox[1]) + 15
+
+    draw.line(
+        (60, line_y, width - 60, line_y),
+        fill=(100, 100, 120),
+        width=2
+    )
+
+    # ===== ROI =====
     roi_text = f"{roi:.2f}x"
     bbox = draw.textbbox((0,0), roi_text, font=roi_font)
     w = bbox[2]-bbox[0]
@@ -101,7 +115,6 @@ def create_minimal_card(token_name, profit, roi,
     x = (width - w)//2
     y = (height - h)//2 - 40
 
-    # ROI GLOW
     for r, alpha in [(4,140),(10,70),(20,30)]:
         glow = Image.new("RGBA", (width, height), (0,0,0,0))
         g = ImageDraw.Draw(glow)
@@ -112,18 +125,16 @@ def create_minimal_card(token_name, profit, roi,
 
     draw = ImageDraw.Draw(img)
 
-    # SHADOW
     draw.text((x, y+10), roi_text,
               font=roi_font,
               fill=(0,0,0,150))
 
-    # MAIN ROI
     draw.text((x, y),
               roi_text,
               font=roi_font,
               fill=roi_color)
 
-    # PROFIT
+    # ===== PROFIT =====
     profit_usd = profit * sol_price_usd
     profit_text = f"{profit:.2f} SOL (${profit_usd:.2f})"
     bbox = draw.textbbox((0,0), profit_text, font=sub_font)
