@@ -147,7 +147,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     img.save(output_path)
 
 # =========================
-# MINIMAL ROI CARD (CLEAN + WORKING)
+# MINIMAL CARD (UPDATED CLEAN)
 # =========================
 def create_minimal_card(token_name, profit, roi,
                         logo_path=None, token_symbol=None,
@@ -162,9 +162,15 @@ def create_minimal_card(token_name, profit, roi,
 
     img = Image.new("RGBA", (width, height))
 
-    roi_color = (0, 255, 180) if roi > 1 else (255, 80, 80)
+    # ROI COLOR LOGIC
+    if roi > 1:
+        roi_color = (0, 255, 120)
+    elif roi < 1:
+        roi_color = (255, 80, 80)
+    else:
+        roi_color = (40, 40, 40)
 
-    # background
+    # BACKGROUND
     draw_bg = ImageDraw.Draw(img)
     for y in range(height):
         draw_bg.line((0, y, width, y),
@@ -174,18 +180,28 @@ def create_minimal_card(token_name, profit, roi,
 
     try:
         roi_font = ImageFont.truetype(font_path, 140)
-        sub_font = ImageFont.truetype(font_path, 44)
-        title_font = ImageFont.truetype(font_path, 80)
+        sub_font = ImageFont.truetype(font_path, 42)
+        title_font = ImageFont.truetype(font_path, 36)
     except:
         roi_font = ImageFont.load_default()
         sub_font = ImageFont.load_default()
         title_font = ImageFont.load_default()
 
-    # TITLE (bigger)
+    # TITLE AUTO-FIT
     title = f"{token_name} (${token_symbol})" if token_symbol else token_name
-    draw.text((40, 30), title, font=title_font, fill=(220, 220, 255))
+    max_width = width - 160
+    size = 36
 
-    # ROI CENTERED
+    while True:
+        font = ImageFont.truetype(font_path, size)
+        bbox = draw.textbbox((0, 0), title, font=font)
+        if (bbox[2] - bbox[0]) <= max_width or size <= 18:
+            break
+        size -= 2
+
+    draw.text((40, 30), title, font=font, fill=(220, 220, 255))
+
+    # ROI CENTER
     roi_text = f"{roi:.2f}x"
     bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
     roi_w = bbox[2] - bbox[0]
@@ -194,7 +210,7 @@ def create_minimal_card(token_name, profit, roi,
     roi_x = (width - roi_w) // 2
     roi_y = (height - roi_h) // 2
 
-    # glow
+    # GLOW
     for r, alpha in [(6,100),(14,50),(28,25)]:
         glow = Image.new("RGBA", (width, height), (0,0,0,0))
         g = ImageDraw.Draw(glow)
@@ -206,31 +222,37 @@ def create_minimal_card(token_name, profit, roi,
 
     draw = ImageDraw.Draw(img)
 
-    # shadow
-    draw.text((roi_x, roi_y + 10),
-              roi_text, font=roi_font,
-              fill=(0,0,0,130))
+    # SHADOW + MAIN
+    draw.text((roi_x, roi_y + 8), roi_text, font=roi_font, fill=(0,0,0,140))
+    draw.text((roi_x, roi_y), roi_text, font=roi_font, fill=roi_color)
 
-    # main ROI
-    draw.text((roi_x, roi_y),
-              roi_text, font=roi_font,
-              fill=(240,255,255))
-
-    # PROFIT (centered + spaced)
+    # PROFIT
     profit_usd = profit * sol_price_usd
     profit_text = f"{profit:.2f} SOL (${profit_usd:.2f})"
 
-    p_bbox = draw.textbbox((0, 0), profit_text, font=sub_font)
-    p_w = p_bbox[2] - p_bbox[0]
-
-    profit_x = (width - p_w) // 2
-    profit_y = roi_y + roi_h + 70
+    bbox = draw.textbbox((0, 0), profit_text, font=sub_font)
+    p_w = bbox[2] - bbox[0]
 
     draw.text(
-        (profit_x, profit_y),
+        ((width - p_w) // 2, roi_y + roi_h + 60),
         profit_text,
         font=sub_font,
         fill=roi_color
     )
+
+    # TOKEN LOGO BOTTOM LEFT
+    try:
+        if logo_path and os.path.exists(logo_path):
+            logo = Image.open(logo_path).convert("RGBA")
+            size = 90
+            logo = logo.resize((size, size), Image.LANCZOS)
+
+            mask = Image.new("L", (size, size), 0)
+            ImageDraw.Draw(mask).ellipse((0, 0, size, size), fill=255)
+            logo.putalpha(mask)
+
+            img.paste(logo, (30, height - size - 30), logo)
+    except:
+        pass
 
     img.save(output_path)
