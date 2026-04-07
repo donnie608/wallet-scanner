@@ -123,7 +123,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Bot v4 DEBUG 🔍")
+    await update.message.reply_text("Welcome to BOWS - Big Oinker's Wallet Scanner 🔍")
 
 
 async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
