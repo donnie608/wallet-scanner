@@ -147,7 +147,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     img.save(output_path)
 
 # =========================
-# MINIMAL CARD (ONLY 2 CHANGES)
+# MINIMAL CARD (ONLY 2 FIXES)
 # =========================
 def create_minimal_card(token_name, profit, roi,
                         logo_path=None, token_symbol=None,
@@ -184,34 +184,24 @@ def create_minimal_card(token_name, profit, roi,
         sub_font = ImageFont.load_default()
         title_font = ImageFont.load_default()
 
-    # ===== CENTERED TITLE =====
+    # centered title
     title = f"{token_name} (${token_symbol})" if token_symbol else token_name
-
     bbox = draw.textbbox((0, 0), title, font=title_font)
-    title_w = bbox[2] - bbox[0]
+    draw.text(((width - (bbox[2]-bbox[0])) // 2, 30), title, font=title_font, fill=(220,220,255))
 
-    draw.text(
-        ((width - title_w) // 2, 30),
-        title,
-        font=title_font,
-        fill=(220, 220, 255)
-    )
-
-    # ROI
+    # ROI (⬆ moved up slightly)
     roi_text = f"{roi:.2f}x"
     bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
     roi_w = bbox[2] - bbox[0]
     roi_h = bbox[3] - bbox[1]
 
     roi_x = (width - roi_w) // 2
-    roi_y = (height - roi_h) // 2
+    roi_y = (height - roi_h) // 2 - 20  # 🔥 moved up
 
     for r, alpha in [(6,100),(14,50),(28,25)]:
         glow = Image.new("RGBA", (width, height), (0,0,0,0))
         g = ImageDraw.Draw(glow)
-        g.text((roi_x, roi_y),
-               roi_text, font=roi_font,
-               fill=(*roi_color, alpha))
+        g.text((roi_x, roi_y), roi_text, font=roi_font, fill=(*roi_color, alpha))
         glow = glow.filter(ImageFilter.GaussianBlur(r))
         img = Image.alpha_composite(img, glow)
 
@@ -220,47 +210,32 @@ def create_minimal_card(token_name, profit, roi,
     draw.text((roi_x, roi_y + 8), roi_text, font=roi_font, fill=(0,0,0,140))
     draw.text((roi_x, roi_y), roi_text, font=roi_font, fill=roi_color)
 
-    # Profit
+    # profit
     profit_usd = profit * sol_price_usd
     profit_text = f"{profit:.2f} SOL (${profit_usd:.2f})"
-
     bbox = draw.textbbox((0, 0), profit_text, font=sub_font)
-    p_w = bbox[2] - bbox[0]
 
-    draw.text(
-        ((width - p_w) // 2, roi_y + roi_h + 60),
-        profit_text,
-        font=sub_font,
-        fill=roi_color
-    )
+    draw.text(((width - (bbox[2]-bbox[0])) // 2, roi_y + roi_h + 60),
+              profit_text, font=sub_font, fill=roi_color)
 
-    # Token logo bottom left
+    # token logo (bottom left)
     try:
         if logo_path and os.path.exists(logo_path):
-            logo = Image.open(logo_path).convert("RGBA")
-            size = 90
-            logo = logo.resize((size, size), Image.LANCZOS)
-
+            size = 100
+            logo = Image.open(logo_path).convert("RGBA").resize((size, size), Image.LANCZOS)
             mask = Image.new("L", (size, size), 0)
-            ImageDraw.Draw(mask).ellipse((0, 0, size, size), fill=255)
+            ImageDraw.Draw(mask).ellipse((0,0,size,size), fill=255)
             logo.putalpha(mask)
-
             img.paste(logo, (30, height - size - 30), logo)
     except:
         pass
 
-    # ===== BRAND LOGO BOTTOM RIGHT =====
+    # brand logo (bottom right, SAME SIZE)
     try:
         if os.path.exists(brand_logo_path):
-            brand_logo = Image.open(brand_logo_path).convert("RGBA")
-            size = 100
-            brand_logo = brand_logo.resize((size, size), Image.LANCZOS)
-
-            img.paste(
-                brand_logo,
-                (width - size - 30, height - size - 30),
-                brand_logo
-            )
+            size = 100  # 🔥 same size
+            brand_logo = Image.open(brand_logo_path).convert("RGBA").resize((size, size), Image.LANCZOS)
+            img.paste(brand_logo, (width - size - 30, height - size - 30), brand_logo)
     except:
         pass
 
