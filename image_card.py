@@ -25,7 +25,7 @@ def create_minimal_card(token_name, profit, roi,
     font_path = os.path.join(BASE_DIR, "Inter.ttf")
     brand_logo_path = os.path.join(BASE_DIR, "logo.png")
 
-    img = Image.new("RGBA", (width, height))
+    img = Image.new("RGBA", (width, height), (0,0,0,255))  # 🔥 BLACK BACKGROUND
 
     # ROI COLOR
     if roi > 1:
@@ -33,27 +33,36 @@ def create_minimal_card(token_name, profit, roi,
     elif roi < 1:
         roi_color = (255, 80, 80)
     else:
-        roi_color = (40, 40, 40)
+        roi_color = (120, 120, 120)
 
-    # BACKGROUND
-    draw_bg = ImageDraw.Draw(img)
-    for y in range(height):
-        draw_bg.line((0, y, width, y),
-                     fill=(50 + y//6, 20 + y//12, 100 + y//3))
+    # ===== NEON BORDER =====
+    border = Image.new("RGBA", (width, height), (0,0,0,0))
+    b_draw = ImageDraw.Draw(border)
 
-    # ===== BACKGROUND POP (SOFT RADIAL GLOW) =====
-    glow_bg = Image.new("RGBA", (width, height), (0,0,0,0))
-    g_draw = ImageDraw.Draw(glow_bg)
+    margin = 10
+    for i, blur in [(8,120), (16,60), (24,30)]:
+        temp = Image.new("RGBA", (width, height), (0,0,0,0))
+        t_draw = ImageDraw.Draw(temp)
 
-    cx, cy = width // 2, height // 2 - 60  # slightly higher anchor
+        t_draw.rounded_rectangle(
+            (margin, margin, width-margin, height-margin),
+            radius=30,
+            outline=(*roi_color, blur),
+            width=3
+        )
 
-    for r in range(0, 260, 8):
-        alpha = int(90 * (1 - r / 260))
-        g_draw.ellipse((cx - r, cy - r, cx + r, cy + r),
-                       fill=(*roi_color, alpha))
+        temp = temp.filter(ImageFilter.GaussianBlur(i))
+        border = Image.alpha_composite(border, temp)
 
-    glow_bg = glow_bg.filter(ImageFilter.GaussianBlur(35))
-    img = Image.alpha_composite(img, glow_bg)
+    # sharp edge
+    b_draw.rounded_rectangle(
+        (margin, margin, width-margin, height-margin),
+        radius=30,
+        outline=roi_color,
+        width=2
+    )
+
+    img = Image.alpha_composite(img, border)
 
     draw = ImageDraw.Draw(img)
 
@@ -70,18 +79,18 @@ def create_minimal_card(token_name, profit, roi,
     title = f"{token_name} (${token_symbol})" if token_symbol else token_name
     bbox = draw.textbbox((0,0), title, font=title_font)
     draw.text(((width-(bbox[2]-bbox[0]))//2, 30),
-              title, font=title_font, fill=(220,220,255))
+              title, font=title_font, fill=(200,200,220))
 
-    # ===== ROI POSITION (MOVED UP MORE) =====
+    # ROI POSITION
     roi_text = f"{roi:.2f}x"
     bbox = draw.textbbox((0,0), roi_text, font=roi_font)
     w = bbox[2]-bbox[0]
     h = bbox[3]-bbox[1]
 
     x = (width - w)//2
-    y = (height - h)//2 - 40  # 🔥 moved up more
+    y = (height - h)//2 - 40
 
-    # ===== TIGHT GLOW (NEON FEEL) =====
+    # ===== ROI GLOW =====
     for r, alpha in [(4,140),(10,70),(20,30)]:
         glow = Image.new("RGBA", (width, height), (0,0,0,0))
         g = ImageDraw.Draw(glow)
@@ -95,9 +104,9 @@ def create_minimal_card(token_name, profit, roi,
     # SHADOW
     draw.text((x, y+10), roi_text,
               font=roi_font,
-              fill=(0,0,0,140))
+              fill=(0,0,0,150))
 
-    # MAIN ROI (SOLID COLOR — NO GRADIENT)
+    # MAIN ROI
     draw.text((x, y),
               roi_text,
               font=roi_font,
