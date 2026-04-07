@@ -27,16 +27,13 @@ def create_minimal_card(token_name, profit, roi,
 
     img = Image.new("RGBA", (width, height))
 
-    # ROI COLORS
+    # ROI COLOR
     if roi > 1:
-        base_color = (0, 255, 120)
-        dark_color = (0, 180, 90)
+        roi_color = (0, 255, 120)
     elif roi < 1:
-        base_color = (255, 80, 80)
-        dark_color = (200, 50, 50)
+        roi_color = (255, 80, 80)
     else:
-        base_color = (40, 40, 40)
-        dark_color = (10, 10, 10)
+        roi_color = (40, 40, 40)
 
     # BACKGROUND
     draw_bg = ImageDraw.Draw(img)
@@ -44,18 +41,19 @@ def create_minimal_card(token_name, profit, roi,
         draw_bg.line((0, y, width, y),
                      fill=(50 + y//6, 20 + y//12, 100 + y//3))
 
-    # RADIAL ENERGY
-    energy = Image.new("RGBA", (width, height), (0,0,0,0))
-    e_draw = ImageDraw.Draw(energy)
-    cx, cy = width//2, height//2 - 20
+    # ===== BACKGROUND POP (SOFT RADIAL GLOW) =====
+    glow_bg = Image.new("RGBA", (width, height), (0,0,0,0))
+    g_draw = ImageDraw.Draw(glow_bg)
 
-    for r in range(0, 280, 10):
-        alpha = int(70 * (1 - r/280))
-        e_draw.ellipse((cx-r, cy-r, cx+r, cy+r),
-                       fill=(*base_color, alpha))
+    cx, cy = width // 2, height // 2 - 60  # slightly higher anchor
 
-    energy = energy.filter(ImageFilter.GaussianBlur(35))
-    img = Image.alpha_composite(img, energy)
+    for r in range(0, 260, 8):
+        alpha = int(90 * (1 - r / 260))
+        g_draw.ellipse((cx - r, cy - r, cx + r, cy + r),
+                       fill=(*roi_color, alpha))
+
+    glow_bg = glow_bg.filter(ImageFilter.GaussianBlur(35))
+    img = Image.alpha_composite(img, glow_bg)
 
     draw = ImageDraw.Draw(img)
 
@@ -74,61 +72,36 @@ def create_minimal_card(token_name, profit, roi,
     draw.text(((width-(bbox[2]-bbox[0]))//2, 30),
               title, font=title_font, fill=(220,220,255))
 
-    # ROI POSITION
+    # ===== ROI POSITION (MOVED UP MORE) =====
     roi_text = f"{roi:.2f}x"
     bbox = draw.textbbox((0,0), roi_text, font=roi_font)
     w = bbox[2]-bbox[0]
     h = bbox[3]-bbox[1]
 
     x = (width - w)//2
-    y = (height - h)//2 - 20
+    y = (height - h)//2 - 40  # 🔥 moved up more
 
-    # GRADIENT (COLOR-PRESERVING)
-    mask = Image.new("L", (width, height), 0)
-    m_draw = ImageDraw.Draw(mask)
-    m_draw.text((x,y), roi_text, font=roi_font, fill=255)
-
-    gradient = Image.new("RGBA", (width, height))
-    g_draw = ImageDraw.Draw(gradient)
-
-    for i in range(height):
-        ratio = i / height
-
-        r = int(base_color[0] - (base_color[0] - dark_color[0]) * ratio * 0.6)
-        g = int(base_color[1] - (base_color[1] - dark_color[1]) * ratio * 0.6)
-        b = int(base_color[2] - (base_color[2] - dark_color[2]) * ratio * 0.6)
-
-        g_draw.line((0,i,width,i), fill=(r,g,b))
-
-    img.paste(gradient, (0,0), mask)
-
-    # TIGHT GLOW
-    for r, alpha in [(4,120),(8,60),(14,25)]:
+    # ===== TIGHT GLOW (NEON FEEL) =====
+    for r, alpha in [(4,140),(10,70),(20,30)]:
         glow = Image.new("RGBA", (width, height), (0,0,0,0))
         g = ImageDraw.Draw(glow)
         g.text((x,y), roi_text, font=roi_font,
-               fill=(*base_color, alpha))
+               fill=(*roi_color, alpha))
         glow = glow.filter(ImageFilter.GaussianBlur(r))
         img = Image.alpha_composite(img, glow)
 
     draw = ImageDraw.Draw(img)
 
-    # EDGE HIGHLIGHT (TINTED, NOT WHITE)
-    highlight = (
-        min(255, base_color[0] + 80),
-        min(255, base_color[1] + 80),
-        min(255, base_color[2] + 80),
-        80
-    )
-
-    draw.text((x, y-2), roi_text,
-              font=roi_font,
-              fill=highlight)
-
     # SHADOW
     draw.text((x, y+10), roi_text,
               font=roi_font,
               fill=(0,0,0,140))
+
+    # MAIN ROI (SOLID COLOR — NO GRADIENT)
+    draw.text((x, y),
+              roi_text,
+              font=roi_font,
+              fill=roi_color)
 
     # PROFIT
     profit_usd = profit * sol_price_usd
@@ -136,7 +109,7 @@ def create_minimal_card(token_name, profit, roi,
     bbox = draw.textbbox((0,0), profit_text, font=sub_font)
 
     draw.text(((width-(bbox[2]-bbox[0]))//2, y+h+60),
-              profit_text, font=sub_font, fill=base_color)
+              profit_text, font=sub_font, fill=roi_color)
 
     # TOKEN LOGO
     try:
