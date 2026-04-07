@@ -3,6 +3,9 @@ import os
 
 print("🔥 IMAGE_CARD FILE LOADED 🔥")
 
+# =========================
+# HELPERS
+# =========================
 def format_number(n, decimals=2):
     return f"{n:,.{decimals}f}"
 
@@ -32,7 +35,7 @@ def reduce_opacity(img, opacity):
 
 
 # =========================
-# FULL CARD (RESTORED)
+# FULL CARD (LOCKED)
 # =========================
 def create_card(token_name, wallet, tokens, cost, value, profit, roi,
                 logo_path=None, token_symbol=None,
@@ -56,7 +59,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
 
     roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80) if roi < 1 else (120, 120, 120)
 
-    # ===== CARD GLOW =====
+    # GLOW
     glow = Image.new("RGBA", (width + 80, height + 80), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow)
     glow_draw.rounded_rectangle(
@@ -67,7 +70,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     glow = glow.filter(ImageFilter.GaussianBlur(20))
     img.paste(glow, (-40, -40), glow)
 
-    # ===== GRADIENT =====
+    # GRADIENT
     card = Image.new("RGBA", (width, height))
     draw_card = ImageDraw.Draw(card)
 
@@ -98,7 +101,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
         small_font = ImageFont.load_default()
         roi_font = ImageFont.load_default()
 
-    # ===== TOKEN LOGO =====
+    # TOKEN LOGO
     try:
         size = 120
         x = width - size - 20
@@ -116,11 +119,10 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
         logo.putalpha(mask)
 
         img.paste(logo, (x, y), logo)
-
     except:
         pass
 
-    # ===== HEADER =====
+    # HEADER
     draw.text((40, 30), token_name, fill=(255, 255, 255), font=title_font)
 
     if token_symbol:
@@ -131,7 +133,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
 
     draw.line((40, 140, width - 40, 140), fill=(120, 120, 160), width=2)
 
-    # ===== VALUES =====
+    # VALUES
     cost_usd = cost * sol_price_usd
     value_usd = value * sol_price_usd
     profit_usd = profit * sol_price_usd
@@ -148,7 +150,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     draw.text((400, 270), "Profit (SOL)", fill=(200, 200, 220), font=label_font)
     draw.text((400, 305), f"{profit:.4f} SOL (${profit_usd:.2f})", fill=profit_color, font=value_font)
 
-    # ===== ROI =====
+    # ROI
     pill_w, pill_h = 180, 70
     pill_x = (width - pill_w) // 2
     pill_y = 370
@@ -166,7 +168,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     roi_value = f"{roi_str}x"
     draw_bold_text(draw, (pill_x + 40, pill_y + 28), roi_value, roi_font, (255, 255, 255))
 
-    # ===== BRAND LOGO =====
+    # BRAND LOGO
     try:
         brand_logo = Image.open(logo_file).convert("RGBA")
         brand_logo = brand_logo.resize((150, 150), Image.LANCZOS)
@@ -176,7 +178,6 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
         y = height - 150 + 25
 
         img.paste(brand_logo, (x, y), brand_logo)
-
     except:
         pass
 
@@ -184,6 +185,48 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
 
 
 # =========================
-# MINIMAL CARD (UNCHANGED)
+# MINIMAL CARD (ACTIVE)
 # =========================
-# (keep your current minimal card exactly as is below)
+def create_minimal_card(token_name, profit, roi,
+                        logo_path=None, token_symbol=None,
+                        sol_price_usd=0):
+
+    width, height = 800, 450
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    output_path = os.path.join(BASE_DIR, "minimal_card.png")
+    font_path = os.path.join(BASE_DIR, "Inter.ttf")
+    brand_logo_path = os.path.join(BASE_DIR, "logo.png")
+
+    img = Image.new("RGBA", (width, height), (0,0,0,255))
+
+    if roi > 1:
+        roi_color = (0, 255, 120)
+    elif roi < 1:
+        roi_color = (255, 80, 80)
+    else:
+        roi_color = (120, 120, 120)
+
+    draw = ImageDraw.Draw(img)
+
+    try:
+        roi_font = ImageFont.truetype(font_path, 150)
+        sub_font = ImageFont.truetype(font_path, 42)
+    except:
+        roi_font = ImageFont.load_default()
+        sub_font = ImageFont.load_default()
+
+    roi_text = f"{roi:.2f}x"
+    bbox = draw.textbbox((0,0), roi_text, font=roi_font)
+    x = (width - (bbox[2]-bbox[0])) // 2
+    y = (height - (bbox[3]-bbox[1])) // 2
+
+    draw.text((x, y), roi_text, font=roi_font, fill=roi_color)
+
+    profit_usd = profit * sol_price_usd
+    profit_text = f"{profit:.2f} SOL (${profit_usd:.2f})"
+
+    bbox = draw.textbbox((0,0), profit_text, font=sub_font)
+    draw.text(((width-(bbox[2]-bbox[0]))//2, y+160),
+              profit_text, font=sub_font, fill=roi_color)
+
+    img.save(output_path)
