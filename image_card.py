@@ -1,6 +1,7 @@
-print("🔥 IMAGE_CARD FILE LOADED 🔥")
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
+
+print("🔥 IMAGE_CARD FILE LOADED 🔥")
 
 def format_number(n, decimals=2):
     return f"{n:,.{decimals}f}"
@@ -146,12 +147,13 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     img.save(output_path)
 
 # =========================
-# MINIMAL ROI CARD (FIXED FOR REAL)
+# MINIMAL ROI CARD (CLEAN + WORKING)
 # =========================
-def create_minimal_card(...):
-    print("🔥 MINIMAL CARD FUNCTION CALLED 🔥")
+def create_minimal_card(token_name, profit, roi,
                         logo_path=None, token_symbol=None,
                         sol_price_usd=0):
+
+    print("🔥 MINIMAL CARD FUNCTION CALLED 🔥")
 
     width, height = 800, 450
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -173,17 +175,17 @@ def create_minimal_card(...):
     try:
         roi_font = ImageFont.truetype(font_path, 140)
         sub_font = ImageFont.truetype(font_path, 44)
-        title_font = ImageFont.truetype(font_path, 80)  # 🔥 BIG jump
+        title_font = ImageFont.truetype(font_path, 80)
     except:
         roi_font = ImageFont.load_default()
         sub_font = ImageFont.load_default()
         title_font = ImageFont.load_default()
 
-    # ===== TITLE (VISIBLY BIGGER) =====
+    # TITLE (bigger)
     title = f"{token_name} (${token_symbol})" if token_symbol else token_name
     draw.text((40, 30), title, font=title_font, fill=(220, 220, 255))
 
-    # ===== ROI CENTER (REAL) =====
+    # ROI CENTERED
     roi_text = f"{roi:.2f}x"
     bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
     roi_w = bbox[2] - bbox[0]
@@ -214,7 +216,7 @@ def create_minimal_card(...):
               roi_text, font=roi_font,
               fill=(240,255,255))
 
-    # ===== PROFIT (CENTERED + CLEAR GAP) =====
+    # PROFIT (centered + spaced)
     profit_usd = profit * sol_price_usd
     profit_text = f"{profit:.2f} SOL (${profit_usd:.2f})"
 
@@ -222,7 +224,7 @@ def create_minimal_card(...):
     p_w = p_bbox[2] - p_bbox[0]
 
     profit_x = (width - p_w) // 2
-    profit_y = roi_y + roi_h + 70  # 🔥 VERY noticeable spacing
+    profit_y = roi_y + roi_h + 70
 
     draw.text(
         (profit_x, profit_y),
