@@ -1,4 +1,4 @@
-print("MINIMAL CARD NEW VERSION RUNNING")
+print("🔥 IMAGE_CARD FILE LOADED 🔥")
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 
@@ -148,7 +148,8 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
 # =========================
 # MINIMAL ROI CARD (FIXED FOR REAL)
 # =========================
-def create_minimal_card(token_name, profit, roi,
+def create_minimal_card(...):
+    print("🔥 MINIMAL CARD FUNCTION CALLED 🔥")
                         logo_path=None, token_symbol=None,
                         sol_price_usd=0):
 
