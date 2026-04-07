@@ -30,7 +30,7 @@ def reduce_opacity(img, opacity):
     return img
 
 # =========================
-# ✅ FULL CARD (UNCHANGED)
+# FULL CARD (UNCHANGED)
 # =========================
 def create_card(token_name, wallet, tokens, cost, value, profit, roi,
                 logo_path=None, token_symbol=None,
@@ -146,7 +146,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     img.save(output_path)
 
 # =========================
-# 🔥 MINIMAL ROI CARD (UPGRADED)
+# MINIMAL ROI CARD (UPDATED)
 # =========================
 def create_minimal_card(token_name, profit, roi,
                         logo_path=None, token_symbol=None,
@@ -161,53 +161,64 @@ def create_minimal_card(token_name, profit, roi,
 
     roi_color = (0, 255, 180) if roi > 1 else (255, 80, 80)
 
-    # background
     draw_bg = ImageDraw.Draw(img)
     for y in range(height):
         draw_bg.line((0, y, width, y),
                      fill=(40 + y//6, 20 + y//12, 80 + y//3))
 
-    center_x, center_y = width//2, height//2 - 20
-    roi_text = f"{roi:.2f}x"
-
     try:
         roi_font = ImageFont.truetype(font_path, 140)
-        sub_font = ImageFont.truetype(font_path, 40)
+        sub_font = ImageFont.truetype(font_path, 42)
+        title_font = ImageFont.truetype(font_path, 56)  # 🔥 100% bigger
     except:
         roi_font = ImageFont.load_default()
         sub_font = ImageFont.load_default()
+        title_font = ImageFont.load_default()
 
-    # 🔥 RADIAL + STARBURST
-    overlay = Image.new("RGBA", (width, height), (0,0,0,0))
-    d = ImageDraw.Draw(overlay)
+    draw = ImageDraw.Draw(img)
 
-    for r in range(0, 300, 10):
-        alpha = int(80 * (1 - r/300))
-        d.ellipse((center_x-r, center_y-r, center_x+r, center_y+r),
-                  fill=(*roi_color, alpha))
+    # ===== TITLE (BIGGER) =====
+    title = f"{token_name} (${token_symbol})" if token_symbol else token_name
+    draw.text((40, 30), title, font=title_font, fill=(220, 220, 255))
 
-    for angle in range(0, 360, 20):
-        x = center_x + int(math.cos(math.radians(angle))*300)
-        y = center_y + int(math.sin(math.radians(angle))*300)
-        d.line((center_x, center_y, x, y),
-               fill=(*roi_color, 25), width=3)
+    # ===== CENTER ROI PERFECTLY =====
+    roi_text = f"{roi:.2f}x"
+    bbox = draw.textbbox((0, 0), roi_text, font=roi_font)
+    text_w = bbox[2] - bbox[0]
+    text_h = bbox[3] - bbox[1]
 
-    overlay = overlay.filter(ImageFilter.GaussianBlur(25))
-    img = Image.alpha_composite(img, overlay)
+    center_x = (width - text_w) // 2
+    center_y = (height - text_h) // 2 - 20
+
+    # glow
+    for r, alpha in [(8,80),(16,40),(30,20)]:
+        glow = Image.new("RGBA", (width, height), (0,0,0,0))
+        g = ImageDraw.Draw(glow)
+        g.text((center_x, center_y),
+               roi_text, font=roi_font,
+               fill=(*roi_color, alpha))
+        glow = glow.filter(ImageFilter.GaussianBlur(r))
+        img = Image.alpha_composite(img, glow)
 
     draw = ImageDraw.Draw(img)
 
     # shadow
-    draw.text((center_x-150, center_y-60+8),
+    draw.text((center_x, center_y+8),
               roi_text, font=roi_font, fill=(0,0,0,120))
 
     # main
-    draw.text((center_x-150, center_y-60),
+    draw.text((center_x, center_y),
               roi_text, font=roi_font, fill=(240,255,255))
 
+    # ===== PROFIT (MORE SPACING) =====
     profit_usd = profit * sol_price_usd
-    draw.text((center_x-140, center_y+90),
-              f"{profit:.2f} SOL (${profit_usd:.2f})",
-              font=sub_font, fill=roi_color)
+    profit_text = f"{profit:.2f} SOL (${profit_usd:.2f})"
+
+    draw.text(
+        (width//2 - 150, center_y + text_h + 40),  # 🔥 more spacing
+        profit_text,
+        font=sub_font,
+        fill=roi_color
+    )
 
     img.save(output_path)
