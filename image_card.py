@@ -25,7 +25,7 @@ def create_minimal_card(token_name, profit, roi,
     font_path = os.path.join(BASE_DIR, "Inter.ttf")
     brand_logo_path = os.path.join(BASE_DIR, "logo.png")
 
-    img = Image.new("RGBA", (width, height), (0,0,0,255))  # 🔥 BLACK BACKGROUND
+    img = Image.new("RGBA", (width, height), (0,0,0,255))
 
     # ROI COLOR
     if roi > 1:
@@ -35,32 +35,43 @@ def create_minimal_card(token_name, profit, roi,
     else:
         roi_color = (120, 120, 120)
 
-    # ===== NEON BORDER =====
+    # ===== NEON BORDER (IMPROVED) =====
     border = Image.new("RGBA", (width, height), (0,0,0,0))
-    b_draw = ImageDraw.Draw(border)
 
-    margin = 10
-    for i, blur in [(8,120), (16,60), (24,30)]:
+    margin = 12
+    radius = 36
+
+    # OUTER GLOW (soft spread)
+    for blur, alpha, expand in [
+        (30, 40, 6),
+        (20, 70, 4),
+        (10, 120, 2),
+    ]:
         temp = Image.new("RGBA", (width, height), (0,0,0,0))
         t_draw = ImageDraw.Draw(temp)
 
         t_draw.rounded_rectangle(
-            (margin, margin, width-margin, height-margin),
-            radius=30,
-            outline=(*roi_color, blur),
+            (margin-expand, margin-expand, width-margin+expand, height-margin+expand),
+            radius=radius,
+            outline=(*roi_color, alpha),
             width=3
         )
 
-        temp = temp.filter(ImageFilter.GaussianBlur(i))
+        temp = temp.filter(ImageFilter.GaussianBlur(blur))
         border = Image.alpha_composite(border, temp)
 
-    # sharp edge
-    b_draw.rounded_rectangle(
+    # SHARP INNER EDGE
+    sharp = Image.new("RGBA", (width, height), (0,0,0,0))
+    s_draw = ImageDraw.Draw(sharp)
+
+    s_draw.rounded_rectangle(
         (margin, margin, width-margin, height-margin),
-        radius=30,
+        radius=radius,
         outline=roi_color,
         width=2
     )
+
+    border = Image.alpha_composite(border, sharp)
 
     img = Image.alpha_composite(img, border)
 
@@ -75,7 +86,7 @@ def create_minimal_card(token_name, profit, roi,
         sub_font = ImageFont.load_default()
         title_font = ImageFont.load_default()
 
-    # TITLE CENTERED
+    # TITLE
     title = f"{token_name} (${token_symbol})" if token_symbol else token_name
     bbox = draw.textbbox((0,0), title, font=title_font)
     draw.text(((width-(bbox[2]-bbox[0]))//2, 30),
@@ -90,7 +101,7 @@ def create_minimal_card(token_name, profit, roi,
     x = (width - w)//2
     y = (height - h)//2 - 40
 
-    # ===== ROI GLOW =====
+    # ROI GLOW
     for r, alpha in [(4,140),(10,70),(20,30)]:
         glow = Image.new("RGBA", (width, height), (0,0,0,0))
         g = ImageDraw.Draw(glow)
