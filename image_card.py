@@ -200,9 +200,9 @@ def create_minimal_card(token_name, profit, roi,
     img = Image.new("RGBA", (width, height), (0,0,0,255))
 
     # ROI COLOR
-    if roi > 1:
+    if roi > 0:
         roi_color = (0, 255, 120)
-    elif roi < 1:
+    elif roi < 0:
         roi_color = (255, 80, 80)
     else:
         roi_color = (120, 120, 120)
