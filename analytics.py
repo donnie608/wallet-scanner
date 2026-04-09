@@ -1,6 +1,9 @@
 import sqlite3
+import time
 
 DB_PATH = "analytics.db"
+
+TREND_WINDOW = 3600  # 1 hour
 
 
 # =========================
@@ -19,8 +22,8 @@ def init_db():
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS wallets (
-            wallet TEXT PRIMARY KEY,
-            count INTEGER
+            wallet TEXT,
+            timestamp INTEGER
         )
     """)
 
@@ -35,11 +38,13 @@ def init_db():
 
 
 # =========================
-# TRACK EVENT (FIXED)
+# TRACK EVENT
 # =========================
 def track_event(command, user_id, wallet):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
+
+    now = int(time.time())
 
     # Track user
     c.execute(
@@ -47,7 +52,7 @@ def track_event(command, user_id, wallet):
         (str(user_id),)
     )
 
-    # Track scans / shares (NO nested calls)
+    # Track stats
     if command == "scan":
         c.execute("""
             INSERT INTO stats (key, value)
@@ -61,37 +66,14 @@ def track_event(command, user_id, wallet):
             ON CONFLICT(key) DO UPDATE SET value = value + 1
         """)
 
-    # Track wallet
-    c.execute("SELECT count FROM wallets WHERE wallet = ?", (wallet,))
-    row = c.fetchone()
-
-    if row:
-        c.execute(
-            "UPDATE wallets SET count = count + 1 WHERE wallet = ?",
-            (wallet,)
-        )
-    else:
-        c.execute(
-            "INSERT INTO wallets (wallet, count) VALUES (?, 1)",
-            (wallet,)
-        )
+    # Track wallet with timestamp
+    c.execute(
+        "INSERT INTO wallets (wallet, timestamp) VALUES (?, ?)",
+        (wallet, now)
+    )
 
     conn.commit()
     conn.close()
-
-
-# =========================
-# GET STAT
-# =========================
-def get_stat(key):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-
-    c.execute("SELECT value FROM stats WHERE key = ?", (key,))
-    row = c.fetchone()
-
-    conn.close()
-    return row[0] if row else 0
 
 
 # =========================
@@ -104,32 +86,45 @@ def get_stats():
     c.execute("SELECT COUNT(*) FROM users")
     users = c.fetchone()[0]
 
-    c.execute("SELECT COUNT(*) FROM wallets")
+    c.execute("SELECT COUNT(DISTINCT wallet) FROM wallets")
     wallets = c.fetchone()[0]
+
+    c.execute("SELECT value FROM stats WHERE key = 'total_scans'")
+    scans = c.fetchone()
+    scans = scans[0] if scans else 0
+
+    c.execute("SELECT value FROM stats WHERE key = 'total_shares'")
+    shares = c.fetchone()
+    shares = shares[0] if shares else 0
 
     conn.close()
 
     return {
         "unique_users": users,
-        "total_scans": get_stat("total_scans"),
-        "total_shares": get_stat("total_shares"),
+        "total_scans": scans,
+        "total_shares": shares,
         "wallets_scanned": wallets,
     }
 
 
 # =========================
-# TOP WALLETS
+# LIVE TRENDING
 # =========================
 def get_top_wallets(limit=5):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
 
+    now = int(time.time())
+    cutoff = now - TREND_WINDOW
+
     c.execute("""
-        SELECT wallet, count
+        SELECT wallet, COUNT(*) as cnt
         FROM wallets
-        ORDER BY count DESC
+        WHERE timestamp >= ?
+        GROUP BY wallet
+        ORDER BY cnt DESC
         LIMIT ?
-    """, (limit,))
+    """, (cutoff, limit))
 
     rows = c.fetchall()
     conn.close()
