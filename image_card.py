@@ -292,7 +292,8 @@ def create_minimal_card(token_name, profit, roi,
 
     # PROFIT
     profit_usd = profit * sol_price_usd
-    profit_text = f"{profit:.2f} SOL (${profit_usd:.2f})"
+    sign = "+" if profit > 0 else ""
+    profit_text = f"{sign}{profit:.2f} SOL (${sign}{profit_usd:.2f})"
     bbox = draw.textbbox((0,0), profit_text, font=sub_font)
 
     draw.text(((width-(bbox[2]-bbox[0]))//2, y+h+60),
