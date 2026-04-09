@@ -57,7 +57,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
 
     img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
 
-    roi_color = (0, 255, 120) if roi > 1 else (255, 80, 80) if roi < 1 else (120, 120, 120)
+    roi_color = (0, 255, 120) if roi > 0 else (255, 80, 80) if roi < 0 else (120, 120, 120)
 
     # GLOW
     glow = Image.new("RGBA", (width + 80, height + 80), (0, 0, 0, 0))
