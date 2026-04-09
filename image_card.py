@@ -155,7 +155,7 @@ def create_card(token_name, wallet, tokens, cost, value, profit, roi,
     pill_x = (width - pill_w) // 2
     pill_y = 370
 
-    pill_color = (0, 200, 100) if roi > 1 else (220, 60, 60) if roi < 1 else (40, 40, 40)
+    pill_color = (0, 200, 100) if roi > 0 else (220, 60, 60) if roi < 0 else (40, 40, 40)
 
     draw.rounded_rectangle(
         (pill_x, pill_y, pill_x + pill_w, pill_y + pill_h),
