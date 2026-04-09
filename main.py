@@ -4,7 +4,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 from scanner import scan_wallet
 from image_card import create_card, create_minimal_card
-from analytics import track_event, get_stats  # ✅ NEW
+from analytics import track_event, get_stats, get_top_wallets  # ✅ UPDATED
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -29,7 +29,6 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Scanning... ⏳")
 
     try:
-        # 🔥 TRACK EVENT
         track_event("scan", user_id, wallet)
 
         result = scan_wallet(wallet)
@@ -75,7 +74,6 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Scanning... ⏳")
 
     try:
-        # 🔥 TRACK EVENT
         track_event("share", user_id, wallet)
 
         result = scan_wallet(wallet)
@@ -97,7 +95,7 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =========================
-# STATS COMMAND (NEW 🔥)
+# STATS
 # =========================
 async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     data = get_stats()
@@ -113,13 +111,33 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg)
 
 
+# =========================
+# 🔥 TOP WALLETS (NEW)
+# =========================
+async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    top_wallets = get_top_wallets()
+
+    if not top_wallets:
+        await update.message.reply_text("No wallet data yet.")
+        return
+
+    msg = "🔥 Top Wallets\n\n"
+
+    for i, (wallet, count) in enumerate(top_wallets, start=1):
+        short = wallet[:6] + "..." + wallet[-4:]
+        msg += f"{i}. {short} — {count} scans\n"
+
+    await update.message.reply_text(msg)
+
+
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
     app.add_handler(CommandHandler("share", share))
-    app.add_handler(CommandHandler("stats", stats))  # ✅ NEW
+    app.add_handler(CommandHandler("stats", stats))
+    app.add_handler(CommandHandler("top", top))  # 🔥 NEW
 
     print("Bot running...")
     app.run_polling()
