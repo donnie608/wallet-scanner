@@ -3,7 +3,7 @@ import time
 
 DB_PATH = "analytics.db"
 
-TREND_WINDOW = 3600  # 1 hour
+TREND_WINDOW = 7200  # 2 hours
 
 
 # =========================
