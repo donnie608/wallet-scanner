@@ -5,25 +5,32 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ANALYTICS_FILE = os.path.join(BASE_DIR, "analytics.json")
 
 
+def default_data():
+    return {
+        "total_scans": 0,
+        "total_shares": 0,
+        "unique_users": [],
+        "wallets_scanned": [],
+        "wallet_counts": {}  # 🔥 NEW
+    }
+
+
 def load_analytics():
     if not os.path.exists(ANALYTICS_FILE):
-        return {
-            "total_scans": 0,
-            "total_shares": 0,
-            "unique_users": [],
-            "wallets_scanned": []
-        }
+        return default_data()
 
     try:
         with open(ANALYTICS_FILE, "r") as f:
-            return json.load(f)
+            data = json.load(f)
+
+        # 🔧 Ensure new field exists (safe upgrade)
+        if "wallet_counts" not in data:
+            data["wallet_counts"] = {}
+
+        return data
+
     except:
-        return {
-            "total_scans": 0,
-            "total_shares": 0,
-            "unique_users": [],
-            "wallets_scanned": []
-        }
+        return default_data()
 
 
 def save_analytics(data):
@@ -40,13 +47,19 @@ def track_event(command, user_id, wallet):
     elif command == "share":
         data["total_shares"] += 1
 
-    # Track unique users
+    # Unique users
     if user_id not in data["unique_users"]:
         data["unique_users"].append(user_id)
 
-    # Track wallets
+    # Unique wallets
     if wallet not in data["wallets_scanned"]:
         data["wallets_scanned"].append(wallet)
+
+    # 🔥 Wallet frequency tracking
+    if wallet not in data["wallet_counts"]:
+        data["wallet_counts"][wallet] = 0
+
+    data["wallet_counts"][wallet] += 1
 
     save_analytics(data)
 
@@ -60,3 +73,13 @@ def get_stats():
         "unique_users": len(data["unique_users"]),
         "wallets_scanned": len(data["wallets_scanned"])
     }
+
+
+def get_top_wallets(limit=5):
+    data = load_analytics()
+    wallet_counts = data.get("wallet_counts", {})
+
+    # Sort by usage
+    sorted_wallets = sorted(wallet_counts.items(), key=lambda x: x[1], reverse=True)
+
+    return sorted_wallets[:limit]
