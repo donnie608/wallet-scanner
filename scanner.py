@@ -188,8 +188,8 @@ def scan_wallet(wallet,):
 
     current_value_sol = net_position * price_sol
     unrealized_profit = current_value_sol - sol_spent
-    roi_multiple = current_value_sol / sol_spent if sol_spent > 0 else 0
-
+    roi_multiple = ((current_value_sol - sol_spent) / sol_spent) if sol_spent > 0 else 0
+    
     # ===== DASHBOARD =====
     print("\n" + "="*50)
     print("WALLET SUMMARY")
