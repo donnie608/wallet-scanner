@@ -17,7 +17,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # FULL SCAN
 # =========================
 async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("FULL TRIGGERED ✅")
 
     if not context.args:
         await update.message.reply_text("Usage: /scan WALLET")
@@ -26,7 +25,8 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet = context.args[0]
     user_id = update.message.from_user.id
 
-    await update.message.reply_text("Scanning... ⏳")
+    # ✅ SINGLE CLEAN MESSAGE
+    await update.message.reply_text("Full Scan Triggered ⏳")
 
     try:
         track_event("scan", user_id, wallet)
@@ -59,10 +59,9 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =========================
-# MINIMAL SHARE (UPDATED 🔥)
+# MINIMAL SHARE
 # =========================
 async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("MINIMAL TRIGGERED ✅")
 
     if not context.args:
         await update.message.reply_text("Usage: /share WALLET")
@@ -71,7 +70,8 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     wallet = context.args[0]
     user_id = update.message.from_user.id
 
-    await update.message.reply_text("Scanning... ⏳")
+    # ✅ SINGLE CLEAN MESSAGE
+    await update.message.reply_text("Share Scan Triggered ⏳")
 
     try:
         track_event("share", user_id, wallet)
@@ -87,13 +87,11 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sol_price_usd=result.get("sol_price_usd", 0)
         )
 
-        # ✅ Send minimal card
+        # Send card
         with open("minimal_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
 
-        # =========================
-        # 🔥 ADD TRENDING WALLETS HERE
-        # =========================
+        # Trending wallets
         top_wallets = get_top_wallets()
 
         if top_wallets:
@@ -102,13 +100,9 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for i, (w, count) in enumerate(top_wallets, start=1):
                 short = w[:6] + "..." + w[-4:]
 
-                # Optional label for top wallet
-                if i == 1:
-                    label = " 🔥"
-                else:
-                    label = ""
+                label = " 🔥" if i == 1 else ""
 
-                msg += f"{i}. {short} — {count} scans{label}\n"
+                msg += f"{i}. {short} — Active{label}\n"
 
             msg += "\n👉 Try scanning one of these wallets"
 
