@@ -1,10 +1,16 @@
 import os
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import (
+    Update,
+    ReplyKeyboardMarkup,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 from telegram.ext import (
     ApplicationBuilder,
     CommandHandler,
     MessageHandler,
     ContextTypes,
+    CallbackQueryHandler,
     filters,
 )
 
@@ -204,6 +210,47 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =========================
+# CALLBACK HANDLER (NEW)
+# =========================
+async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    data = query.data
+
+    if data.startswith("scan_"):
+        wallet = data.replace("scan_", "")
+        user_id = query.from_user.id
+
+        await query.message.reply_text("Full Scan Triggered ⏳")
+
+        try:
+            track_event("scan", user_id, wallet)
+            result = scan_wallet(wallet)
+
+            create_card(
+                result.get("token_name"),
+                wallet,
+                result.get("net_position", 0),
+                result.get("cost_sol", 0),
+                result.get("value_sol", 0),
+                result.get("profit_sol", 0),
+                result.get("roi_multiple", 1),
+                logo_path=result.get("logo_path"),
+                token_symbol=result.get("token_symbol"),
+                buy_count=result.get("buys", 0),
+                sell_count=result.get("sells", 0),
+                sol_price_usd=result.get("sol_price_usd", 0),
+            )
+
+            with open("position_card.png", "rb") as img:
+                await query.message.reply_photo(photo=img)
+
+        except Exception as e:
+            await query.message.reply_text(f"Error: {str(e)}")
+
+
+# =========================
 # STATS LOGIC
 # =========================
 async def send_stats(update: Update):
@@ -221,7 +268,7 @@ async def send_stats(update: Update):
 
 
 # =========================
-# TRENDING LOGIC
+# TRENDING LOGIC (UPDATED)
 # =========================
 async def send_trending(update: Update):
     top_wallets = get_top_wallets()
@@ -231,15 +278,26 @@ async def send_trending(update: Update):
         return
 
     msg = "🔥 Trending Wallets\n\n"
+    keyboard = []
 
     for i, (wallet, count) in enumerate(top_wallets, start=1):
         short = wallet[:6] + "..." + wallet[-4:]
         label = " 🔥" if i == 1 else ""
+
         msg += f"{i}. {short} — Active{label}\n"
 
-    msg += "\n👉 Try scanning one of these wallets"
+        keyboard.append([
+            InlineKeyboardButton(
+                text=f"🔍 Scan {short}",
+                callback_data=f"scan_{wallet}"
+            )
+        ])
 
-    await update.message.reply_text(msg)
+    msg += "\n👇 Tap to scan instantly"
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(msg, reply_markup=reply_markup)
 
 
 # =========================
@@ -248,14 +306,17 @@ async def send_trending(update: Update):
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # ✅ COMMANDS FIRST
+    # COMMANDS
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
     app.add_handler(CommandHandler("share", share))
     app.add_handler(CommandHandler("stats", stats))
     app.add_handler(CommandHandler("top", top))
 
-    # ✅ MESSAGE HANDLER LAST
+    # CALLBACK BUTTONS
+    app.add_handler(CallbackQueryHandler(handle_button))
+
+    # MESSAGE HANDLER LAST
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("Bot running...")
