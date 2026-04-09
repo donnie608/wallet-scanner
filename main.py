@@ -4,7 +4,7 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 from scanner import scan_wallet
 from image_card import create_card, create_minimal_card
-from analytics import track_event, get_stats, get_top_wallets  # ✅ UPDATED
+from analytics import track_event, get_stats, get_top_wallets
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -59,7 +59,7 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =========================
-# MINIMAL SHARE
+# MINIMAL SHARE (UPDATED 🔥)
 # =========================
 async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("MINIMAL TRIGGERED ✅")
@@ -87,8 +87,32 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sol_price_usd=result.get("sol_price_usd", 0)
         )
 
+        # ✅ Send minimal card
         with open("minimal_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
+
+        # =========================
+        # 🔥 ADD TRENDING WALLETS HERE
+        # =========================
+        top_wallets = get_top_wallets()
+
+        if top_wallets:
+            msg = "🔥 Trending Wallets\n\n"
+
+            for i, (w, count) in enumerate(top_wallets, start=1):
+                short = w[:6] + "..." + w[-4:]
+
+                # Optional label for top wallet
+                if i == 1:
+                    label = " 🔥"
+                else:
+                    label = ""
+
+                msg += f"{i}. {short} — {count} scans{label}\n"
+
+            msg += "\n👉 Try scanning one of these wallets"
+
+            await update.message.reply_text(msg)
 
     except Exception as e:
         await update.message.reply_text(f"Error: {str(e)}")
@@ -112,7 +136,7 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =========================
-# 🔥 TOP WALLETS (NEW)
+# TOP WALLETS
 # =========================
 async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
     top_wallets = get_top_wallets()
@@ -137,7 +161,7 @@ def main():
     app.add_handler(CommandHandler("scan", scan))
     app.add_handler(CommandHandler("share", share))
     app.add_handler(CommandHandler("stats", stats))
-    app.add_handler(CommandHandler("top", top))  # 🔥 NEW
+    app.add_handler(CommandHandler("top", top))
 
     print("Bot running...")
     app.run_polling()
