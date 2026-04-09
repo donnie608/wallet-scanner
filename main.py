@@ -21,7 +21,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 def get_keyboard():
     return ReplyKeyboardMarkup(
         [
-            ["🔍 Scan Wallet", "📤 Share Card"],
+            ["🔍 Scan Wallet", "📤 Create Shareable Card"],
             ["🔥 Trending", "📊 Stats"],
         ],
         resize_keyboard=True,
@@ -129,7 +129,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["mode"] = "scan"
         await update.message.reply_text("Send wallet address to scan ⏳")
 
-    elif text == "📤 Share Card":
+    elif text == "📤 Create Shareable Card":
         context.user_data["mode"] = "share"
         await update.message.reply_text("Send wallet address to generate share card ⏳")
 
