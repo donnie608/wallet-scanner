@@ -3,7 +3,8 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
 from scanner import scan_wallet
-from image_card import create_card, create_minimal_card  # ✅ IMPORT BOTH
+from image_card import create_card, create_minimal_card
+from analytics import track_event, get_stats  # ✅ NEW
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -12,6 +13,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome to BOWS - Big Oinker's Wallet Scanner 🔍")
 
 
+# =========================
+# FULL SCAN
+# =========================
 async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("FULL TRIGGERED ✅")
 
@@ -20,9 +24,14 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     wallet = context.args[0]
+    user_id = update.message.from_user.id
+
     await update.message.reply_text("Scanning... ⏳")
 
     try:
+        # 🔥 TRACK EVENT
+        track_event("scan", user_id, wallet)
+
         result = scan_wallet(wallet)
 
         token_name = result.get("token_name", "Token")
@@ -50,6 +59,9 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error: {str(e)}")
 
 
+# =========================
+# MINIMAL SHARE
+# =========================
 async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("MINIMAL TRIGGERED ✅")
 
@@ -58,9 +70,14 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     wallet = context.args[0]
+    user_id = update.message.from_user.id
+
     await update.message.reply_text("Scanning... ⏳")
 
     try:
+        # 🔥 TRACK EVENT
+        track_event("share", user_id, wallet)
+
         result = scan_wallet(wallet)
 
         create_minimal_card(
@@ -72,11 +89,28 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             sol_price_usd=result.get("sol_price_usd", 0)
         )
 
-        with open("minimal_card.png", "rb") as img:  # ✅ CORRECT FILE
+        with open("minimal_card.png", "rb") as img:
             await update.message.reply_photo(photo=img)
 
     except Exception as e:
         await update.message.reply_text(f"Error: {str(e)}")
+
+
+# =========================
+# STATS COMMAND (NEW 🔥)
+# =========================
+async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    data = get_stats()
+
+    msg = (
+        f"📊 Analytics\n\n"
+        f"👥 Users: {data['unique_users']}\n"
+        f"🔍 Scans: {data['total_scans']}\n"
+        f"📤 Shares: {data['total_shares']}\n"
+        f"💼 Wallets: {data['wallets_scanned']}"
+    )
+
+    await update.message.reply_text(msg)
 
 
 def main():
@@ -85,6 +119,7 @@ def main():
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
     app.add_handler(CommandHandler("share", share))
+    app.add_handler(CommandHandler("stats", stats))  # ✅ NEW
 
     print("Bot running...")
     app.run_polling()
