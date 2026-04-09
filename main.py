@@ -1,6 +1,6 @@
 import os
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram import Update, ReplyKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
 from scanner import scan_wallet
 from image_card import create_card, create_minimal_card
@@ -9,113 +9,117 @@ from analytics import track_event, get_stats, get_top_wallets
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
+# =========================
+# KEYBOARD
+# =========================
+def get_keyboard():
+    return ReplyKeyboardMarkup(
+        [
+            ["🔍 Scan Wallet", "📤 Share Card"],
+            ["🔥 Trending", "📊 Stats"]
+        ],
+        resize_keyboard=True
+    )
+
+
+# =========================
+# START
+# =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Welcome to BOWS - Big Oinker's Wallet Scanner 🔍")
+    await update.message.reply_text(
+        "Welcome to BOWS 🐷\n\nChoose an option:",
+        reply_markup=get_keyboard()
+    )
 
 
 # =========================
-# FULL SCAN
+# HANDLE BUTTONS
 # =========================
-async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
 
-    if not context.args:
-        await update.message.reply_text("Usage: /scan WALLET")
-        return
+    if text == "🔍 Scan Wallet":
+        context.user_data["mode"] = "scan"
+        await update.message.reply_text("Send wallet address to scan ⏳")
 
-    wallet = context.args[0]
-    user_id = update.message.from_user.id
+    elif text == "📤 Share Card":
+        context.user_data["mode"] = "share"
+        await update.message.reply_text("Send wallet address to generate share card ⏳")
 
-    # ✅ SINGLE CLEAN MESSAGE
-    await update.message.reply_text("Full Scan Triggered ⏳")
+    elif text == "🔥 Trending":
+        await send_trending(update)
 
-    try:
-        track_event("scan", user_id, wallet)
+    elif text == "📊 Stats":
+        await send_stats(update)
 
-        result = scan_wallet(wallet)
+    else:
+        # Assume wallet input
+        mode = context.user_data.get("mode")
 
-        token_name = result.get("token_name", "Token")
-        token_symbol = result.get("token_symbol")
+        if not mode:
+            await update.message.reply_text("Please choose an option first.")
+            return
 
-        create_card(
-            token_name,
-            wallet,
-            result.get("net_position", 0),
-            result.get("cost_sol", 0),
-            result.get("value_sol", 0),
-            result.get("profit_sol", 0),
-            result.get("roi_multiple", 1),
-            logo_path=result.get("logo_path"),
-            token_symbol=token_symbol,
-            buy_count=result.get("buys", 0),
-            sell_count=result.get("sells", 0),
-            sol_price_usd=result.get("sol_price_usd", 0)
-        )
+        wallet = text
+        user_id = update.message.from_user.id
 
-        with open("position_card.png", "rb") as img:
-            await update.message.reply_photo(photo=img)
+        if mode == "scan":
+            await update.message.reply_text("Full Scan Triggered ⏳")
 
-    except Exception as e:
-        await update.message.reply_text(f"Error: {str(e)}")
+            try:
+                track_event("scan", user_id, wallet)
+                result = scan_wallet(wallet)
 
+                create_card(
+                    result.get("token_name"),
+                    wallet,
+                    result.get("net_position", 0),
+                    result.get("cost_sol", 0),
+                    result.get("value_sol", 0),
+                    result.get("profit_sol", 0),
+                    result.get("roi_multiple", 1),
+                    logo_path=result.get("logo_path"),
+                    token_symbol=result.get("token_symbol"),
+                    buy_count=result.get("buys", 0),
+                    sell_count=result.get("sells", 0),
+                    sol_price_usd=result.get("sol_price_usd", 0)
+                )
 
-# =========================
-# MINIMAL SHARE
-# =========================
-async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
+                with open("position_card.png", "rb") as img:
+                    await update.message.reply_photo(photo=img)
 
-    if not context.args:
-        await update.message.reply_text("Usage: /share WALLET")
-        return
+            except Exception as e:
+                await update.message.reply_text(f"Error: {str(e)}")
 
-    wallet = context.args[0]
-    user_id = update.message.from_user.id
+        elif mode == "share":
+            await update.message.reply_text("Share Scan Triggered ⏳")
 
-    # ✅ SINGLE CLEAN MESSAGE
-    await update.message.reply_text("Share Scan Triggered ⏳")
+            try:
+                track_event("share", user_id, wallet)
+                result = scan_wallet(wallet)
 
-    try:
-        track_event("share", user_id, wallet)
+                create_minimal_card(
+                    result.get("token_name"),
+                    result.get("profit_sol", 0),
+                    result.get("roi_multiple", 1),
+                    logo_path=result.get("logo_path"),
+                    token_symbol=result.get("token_symbol"),
+                    sol_price_usd=result.get("sol_price_usd", 0)
+                )
 
-        result = scan_wallet(wallet)
+                with open("minimal_card.png", "rb") as img:
+                    await update.message.reply_photo(photo=img)
 
-        create_minimal_card(
-            result.get("token_name"),
-            result.get("profit_sol", 0),
-            result.get("roi_multiple", 1),
-            logo_path=result.get("logo_path"),
-            token_symbol=result.get("token_symbol"),
-            sol_price_usd=result.get("sol_price_usd", 0)
-        )
+                await send_trending(update)
 
-        # Send card
-        with open("minimal_card.png", "rb") as img:
-            await update.message.reply_photo(photo=img)
-
-        # Trending wallets
-        top_wallets = get_top_wallets()
-
-        if top_wallets:
-            msg = "🔥 Trending Wallets\n\n"
-
-            for i, (w, count) in enumerate(top_wallets, start=1):
-                short = w[:6] + "..." + w[-4:]
-
-                label = " 🔥" if i == 1 else ""
-
-                msg += f"{i}. {short} — Active{label}\n"
-
-            msg += "\n👉 Try scanning one of these wallets"
-
-            await update.message.reply_text(msg)
-
-    except Exception as e:
-        await update.message.reply_text(f"Error: {str(e)}")
+            except Exception as e:
+                await update.message.reply_text(f"Error: {str(e)}")
 
 
 # =========================
 # STATS
 # =========================
-async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def send_stats(update: Update):
     data = get_stats()
 
     msg = (
@@ -130,32 +134,35 @@ async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =========================
-# TOP WALLETS
+# TRENDING
 # =========================
-async def top(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def send_trending(update: Update):
     top_wallets = get_top_wallets()
 
     if not top_wallets:
         await update.message.reply_text("No wallet data yet.")
         return
 
-    msg = "🔥 Top Wallets\n\n"
+    msg = "🔥 Trending Wallets\n\n"
 
     for i, (wallet, count) in enumerate(top_wallets, start=1):
         short = wallet[:6] + "..." + wallet[-4:]
-        msg += f"{i}. {short} — {count} scans\n"
+        label = " 🔥" if i == 1 else ""
+        msg += f"{i}. {short} — Active{label}\n"
+
+    msg += "\n👉 Try scanning one of these wallets"
 
     await update.message.reply_text(msg)
 
 
+# =========================
+# MAIN
+# =========================
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("scan", scan))
-    app.add_handler(CommandHandler("share", share))
-    app.add_handler(CommandHandler("stats", stats))
-    app.add_handler(CommandHandler("top", top))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("Bot running...")
     app.run_polling()
