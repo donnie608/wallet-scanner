@@ -409,3 +409,6 @@ def solana_scan(wallet):
         "sol_price_usd": sol_price_usd,
         "logo_path": logo_path
     }
+
+def scan_wallet(wallet):
+    return solana_scan(wallet)
