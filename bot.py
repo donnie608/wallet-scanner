@@ -27,14 +27,28 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_photo(photo=img)
 
         response = f"""
-ROI: {result['roi']}x
-Profit: {result['profit_sol']} SOL
-Value: {result['value_sol']} SOL
+SOL WALLET SUMMARY
+
+Token: {result['token_name']} (${result['token_symbol']})
+Wallet: {wallet}
+
+ACTIVITY
+{result['buys']} Buys | {result['sells']} Sells | {result['transfers_in']} Transfers In | {result['transfers_out']} Transfers Out
+
+POSITION
+Net Position: {result['net_position']} tokens
+
+CAPITAL
+Net Cost: {result['cost_sol']} SOL
+Current Value: {result['value_sol']} SOL
+
+PERFORMANCE
+PnL: {result['profit_sol']} SOL
+ROI: {result['roi_multiple']}x
+
+SOL Price: ${round(result['sol_price_usd'], 2)}
 """
         await update.message.reply_text(response)
-
-    except Exception as e:
-        await update.message.reply_text(f"Error: {str(e)}")
 
 
 def main():
