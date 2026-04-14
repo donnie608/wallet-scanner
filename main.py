@@ -76,6 +76,8 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             with open("position_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
 
+            await update.message.reply_text(build_scan_report(result, wallet))
+
         except Exception as e:
             await update.message.reply_text(f"Error: {str(e)}")
 
@@ -119,6 +121,29 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data["mode"] = "share"
         await update.message.reply_text("Send wallet address to generate share card ⏳")
 
+def build_scan_report(result, wallet):
+    return f"""
+SOL WALLET SUMMARY
+
+Token: {result.get('token_name')} (${result.get('token_symbol')})
+Wallet: {wallet}
+
+ACTIVITY
+{result.get('buys', 0)} Buys | {result.get('sells', 0)} Sells | {result.get('transfers_in', 0)} Transfers In | {result.get('transfers_out', 0)} Transfers Out
+
+POSITION
+Net Position: {result.get('net_position', 0)} tokens
+
+CAPITAL
+Net Cost: {result.get('cost_sol', 0)} SOL
+Current Value: {result.get('value_sol', 0)} SOL
+
+PERFORMANCE
+PnL: {result.get('profit_sol', 0)} SOL
+ROI: {result.get('roi_multiple', 0)}x
+
+SOL Price: ${round(result.get('sol_price_usd', 0), 2)}
+"""
 
 # =========================
 # /stats
@@ -188,6 +213,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             with open("position_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
 
+            await update.message.reply_text(build_scan_report(result, wallet))
+
         elif mode == "share":
             await update.message.reply_text("Share Scan Triggered ⏳")
 
@@ -245,6 +272,8 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             with open("position_card.png", "rb") as img:
                 await query.message.reply_photo(photo=img)
+
+            await query.message.reply_text(build_scan_report(result, wallet))
 
         except Exception as e:
             await query.message.reply_text(f"Error: {str(e)}")
