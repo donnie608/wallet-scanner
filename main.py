@@ -56,7 +56,8 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
             track_event("scan", user_id, wallet)
-            result = scan_wallet(wallet)
+            chain = "eth" if wallet.startswith("0x") else "sol"
+            result = scan_wallet(wallet, chain=chain)
 
             create_card(
                 result.get("token_name"),
@@ -99,7 +100,8 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
             track_event("share", user_id, wallet)
-            result = scan_wallet(wallet)
+            chain = "eth" if wallet.startswith("0x") else "sol"
+            result = scan_wallet(wallet, chain=chain)
 
             create_minimal_card(
                 result.get("token_name"),
@@ -195,7 +197,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Full Scan Triggered ⏳")
 
             track_event("scan", user_id, wallet)
-            result = scan_wallet(wallet)
+            chain = "eth" if wallet.startswith("0x") else "sol"
+            result = scan_wallet(wallet, chain=chain)
 
             create_card(
                 result.get("token_name"),
@@ -221,7 +224,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Share Scan Triggered ⏳")
 
             track_event("share", user_id, wallet)
-            result = scan_wallet(wallet)
+            chain = "eth" if wallet.startswith("0x") else "sol"
+            result = scan_wallet(wallet, chain=chain)
 
             create_minimal_card(
                 result.get("token_name"),
@@ -255,7 +259,8 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         try:
             track_event("scan", user_id, wallet)
-            result = scan_wallet(wallet)
+            chain = "eth" if wallet.startswith("0x") else "sol"
+            result = scan_wallet(wallet, chain=chain)
 
             create_card(
                 result.get("token_name"),
