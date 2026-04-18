@@ -79,7 +79,8 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(build_scan_report(result, wallet))
 
         except Exception as e:
-            await update.message.reply_text(f"Error: {str(e)}")
+            import traceback
+            await update.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
 
     else:
         context.user_data["mode"] = "scan"
@@ -115,7 +116,8 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await send_trending(update)
 
         except Exception as e:
-            await update.message.reply_text(f"Error: {str(e)}")
+            import traceback
+            await update.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
 
     else:
         context.user_data["mode"] = "share"
