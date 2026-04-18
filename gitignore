@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+token_cache.json
+eth_price_cache.json
+position_card.png
+minimal_card.png
+temp_logo.png
