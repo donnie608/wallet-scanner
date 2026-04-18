@@ -20,8 +20,6 @@ from analytics import track_event, get_stats, get_top_wallets
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
 
 # =========================
 # KEYBOARD
@@ -70,7 +68,7 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     value_usd=result.get("value_usd", 0),
                     profit_usd=result.get("current_profit_usd", 0),
                     roi=result.get("roi_multiple_usd", 0),
-                    logo_path=os.path.join(BASE_DIR, "temp_logo.png"),
+                    logo_path="temp_logo.png",
                     token_symbol=result.get("token_symbol"),
                     buy_count=result.get("buys", 0),
                     sell_count=result.get("sells", 0),
@@ -91,7 +89,7 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     sol_price_usd=result.get("sol_price_usd", 0),
                 )
 
-            with open(card_path, "rb") as img:
+            with open("position_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
 
             await update.message.reply_text(build_scan_report(result, wallet, chain))
@@ -125,7 +123,7 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     token_name=result.get("token_name"),
                     profit_usd=result.get("current_profit_usd", 0),
                     roi=result.get("roi_multiple_usd", 0),
-                    logo_path=os.path.join(BASE_DIR, "temp_logo.png"),
+                    logo_path="temp_logo.png",
                     token_symbol=result.get("token_symbol"),
                 )
             else:
@@ -138,8 +136,7 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     sol_price_usd=result.get("sol_price_usd", 0),
                 )
 
-            card_path = os.path.join(BASE_DIR, "minimal_card.png")
-            with open(card_path, "rb") as img:
+            with open("minimal_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
 
             await send_trending(update)
@@ -264,7 +261,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         value_usd=result.get("value_usd", 0),
                         profit_usd=result.get("current_profit_usd", 0),
                         roi=result.get("roi_multiple_usd", 0),
-                        logo_path=os.path.join(BASE_DIR, "temp_logo.png"),
+                        logo_path="temp_logo.png",
                         token_symbol=result.get("token_symbol"),
                         buy_count=result.get("buys", 0),
                         sell_count=result.get("sells", 0),
@@ -285,7 +282,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         sol_price_usd=result.get("sol_price_usd", 0),
                     )
 
-                with open(card_path, "rb") as img:
+                with open("position_card.png", "rb") as img:
                     await update.message.reply_photo(photo=img)
 
                 await update.message.reply_text(build_scan_report(result, wallet, chain))
@@ -307,7 +304,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         token_name=result.get("token_name"),
                         profit_usd=result.get("current_profit_usd", 0),
                         roi=result.get("roi_multiple_usd", 0),
-                        logo_path=os.path.join(BASE_DIR, "temp_logo.png"),
+                        logo_path="temp_logo.png",
                         token_symbol=result.get("token_symbol"),
                     )
                 else:
@@ -320,8 +317,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         sol_price_usd=result.get("sol_price_usd", 0),
                     )
 
-                card_path = os.path.join(BASE_DIR, "minimal_card.png")
-                with open(card_path, "rb") as img:
+                with open("minimal_card.png", "rb") as img:
                     await update.message.reply_photo(photo=img)
 
                 await send_trending(update)
@@ -360,7 +356,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     value_usd=result.get("value_usd", 0),
                     profit_usd=result.get("current_profit_usd", 0),
                     roi=result.get("roi_multiple_usd", 0),
-                    logo_path=os.path.join(BASE_DIR, "temp_logo.png"),
+                    logo_path="temp_logo.png",
                     token_symbol=result.get("token_symbol"),
                     buy_count=result.get("buys", 0),
                     sell_count=result.get("sells", 0),
@@ -381,7 +377,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     sol_price_usd=result.get("sol_price_usd", 0),
                 )
 
-            with open(card_path, "rb") as img:
+            with open("position_card.png", "rb") as img:
                 await query.message.reply_photo(photo=img)
 
             await query.message.reply_text(build_scan_report(result, wallet, chain))
