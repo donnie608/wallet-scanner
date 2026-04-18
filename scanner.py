@@ -836,6 +836,7 @@ def build_weth_receipts_by_hash_from_etherscan(wallet):
 
 
 def get_actual_eth_recovery_for_sell_hash(wallet, sell_hash, weth_receipts_by_hash):
+    time.sleep(0.3)
     recovered_native = 0.0
     recovered_weth = 0.0
 
