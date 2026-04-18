@@ -91,7 +91,6 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     sol_price_usd=result.get("sol_price_usd", 0),
                 )
 
-            card_path = os.path.join(BASE_DIR, "position_card.png")
             with open(card_path, "rb") as img:
                 await update.message.reply_photo(photo=img)
 
@@ -286,7 +285,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         sol_price_usd=result.get("sol_price_usd", 0),
                     )
 
-                card_path = os.path.join(BASE_DIR, "position_card.png")
                 with open(card_path, "rb") as img:
                     await update.message.reply_photo(photo=img)
 
@@ -383,7 +381,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     sol_price_usd=result.get("sol_price_usd", 0),
                 )
 
-            card_path = os.path.join(BASE_DIR, "position_card.png")
             with open(card_path, "rb") as img:
                 await query.message.reply_photo(photo=img)
 
