@@ -336,6 +336,7 @@ def create_eth_card(token_name, wallet, tokens, cost_usd, value_usd, profit_usd,
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     output_path = os.path.join(BASE_DIR, "position_card.png")
+                        print("SAVING CARD TO:", output_path)
     font_path = os.path.join(BASE_DIR, "Inter.ttf")
     logo_file = os.path.join(BASE_DIR, "logo.png")
 
