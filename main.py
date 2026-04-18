@@ -93,9 +93,10 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             BASE_DIR = os.path.dirname(os.path.abspath(__file__))
             card_path = os.path.join(BASE_DIR, "position_card.png")
             import glob
-            print("FILES:", glob.glob("/app/*.png"))
+            card_path = os.path.join(os.getcwd(), "position_card.png")
+            print("LOOKING FOR:", card_path)
+            print("EXISTS:", os.path.exists(card_path))
             with open(card_path, "rb") as img:
-                await update.message.reply_photo(photo=img)
 
             await update.message.reply_text(build_scan_report(result, wallet, chain))
 
