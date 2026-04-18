@@ -90,7 +90,8 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_photo(photo=img)
 
     except Exception as e:
-        await update.message.reply_text(f"❌ Error: {str(e)}")
+        import traceback
+        await update.message.reply_text(f"❌ Error: {str(e)}\n{traceback.format_exc()}")
 
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
