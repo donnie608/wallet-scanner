@@ -92,6 +92,8 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             BASE_DIR = os.path.dirname(os.path.abspath(__file__))
             card_path = os.path.join(BASE_DIR, "position_card.png")
+            import glob
+            print("FILES:", glob.glob("/app/*.png"))
             with open(card_path, "rb") as img:
                 await update.message.reply_photo(photo=img)
 
