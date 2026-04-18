@@ -96,7 +96,8 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             card_path = os.path.join(os.getcwd(), "position_card.png")
             print("LOOKING FOR:", card_path)
             print("EXISTS:", os.path.exists(card_path))
-            with open(card_path, "rb") as img:
+with open(card_path, "rb") as img:
+                await update.message.reply_photo(photo=img)
 
             await update.message.reply_text(build_scan_report(result, wallet, chain))
 
