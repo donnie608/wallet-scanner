@@ -27,7 +27,9 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chain = "eth" if wallet.startswith("0x") else "sol"
         result = scan_wallet(wallet, chain=chain)
 
-        with open("position_card.png", "rb") as img:
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        card_path = os.path.join(BASE_DIR, "position_card.png")
+        with open(card_path, "rb") as img:
             await update.message.reply_photo(photo=img)
 
         if chain == "eth":
@@ -54,6 +56,7 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         import traceback
         await update.message.reply_text(f"❌ Error: {str(e)}\n{traceback.format_exc()}")
+
 
 async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
@@ -86,20 +89,21 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 sol_price_usd=result["sol_price_usd"],
             )
 
-        with open("minimal_card.png", "rb") as img:
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        card_path = os.path.join(BASE_DIR, "minimal_card.png")
+        with open(card_path, "rb") as img:
             await update.message.reply_photo(photo=img)
 
     except Exception as e:
         import traceback
         await update.message.reply_text(f"❌ Error: {str(e)}\n{traceback.format_exc()}")
 
+
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("scan", scan))
     app.add_handler(CommandHandler("share", share))
-
     print("Bot running...")
     app.run_polling(drop_pending_updates=True)
 
