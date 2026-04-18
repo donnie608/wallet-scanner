@@ -90,7 +90,9 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     sol_price_usd=result.get("sol_price_usd", 0),
                 )
 
-            with open("position_card.png", "rb") as img:
+            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+            card_path = os.path.join(BASE_DIR, "position_card.png")
+            with open(card_path, "rb") as img:
                 await update.message.reply_photo(photo=img)
 
             await update.message.reply_text(build_scan_report(result, wallet, chain))
@@ -136,9 +138,10 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     sol_price_usd=result.get("sol_price_usd", 0),
                 )
 
-            with open("minimal_card.png", "rb") as img:
+            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+            card_path = os.path.join(BASE_DIR, "minimal_card.png")
+            with open(card_path, "rb") as img:
                 await update.message.reply_photo(photo=img)
-
             await send_trending(update)
 
         except Exception as e:
