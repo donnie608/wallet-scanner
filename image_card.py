@@ -335,7 +335,7 @@ def create_eth_card(token_name, wallet, tokens, cost_usd, value_usd, profit_usd,
     width, height = 800, 450
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    output_path = "/app/position_card.png" if os.path.isdir("/app") else os.path.join(BASE_DIR, "position_card.png")
+    output_path = os.path.join(BASE_DIR, "position_card.png")
     font_path = os.path.join(BASE_DIR, "Inter.ttf")
     logo_file = os.path.join(BASE_DIR, "logo.png")
 
@@ -458,6 +458,8 @@ def create_eth_card(token_name, wallet, tokens, cost_usd, value_usd, profit_usd,
         img.paste(brand_logo, (x, y), brand_logo)
     except:
         pass
+
+    img.save(output_path)
 
 def create_minimal_eth_card(token_name, profit_usd, roi,
                              logo_path=None, token_symbol=None):
