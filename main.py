@@ -278,7 +278,8 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.message.reply_text(build_scan_report(result, wallet))
 
         except Exception as e:
-            await query.message.reply_text(f"Error: {str(e)}")
+            import traceback
+            await query.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
 
 
 # =========================
