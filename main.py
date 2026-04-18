@@ -59,34 +59,48 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chain = "eth" if wallet.startswith("0x") else "sol"
             result = scan_wallet(wallet, chain=chain)
 
-            create_card(
-                result.get("token_name"),
-                wallet,
-                result.get("net_position", 0),
-                result.get("cost_sol", 0),
-                result.get("value_sol", 0),
-                result.get("profit_sol", 0),
-                result.get("roi_multiple", 1),
-                logo_path=result.get("logo_path"),
-                token_symbol=result.get("token_symbol"),
-                buy_count=result.get("buys", 0),
-                sell_count=result.get("sells", 0),
-                sol_price_usd=result.get("sol_price_usd", 0),
-            )
+            if chain == "eth":
+                from image_card import create_eth_card
+                create_eth_card(
+                    token_name=result.get("token_name"),
+                    wallet=wallet,
+                    tokens=result.get("net_position", 0),
+                    cost_usd=result.get("total_usd_spent", 0),
+                    value_usd=result.get("value_usd", 0),
+                    profit_usd=result.get("current_profit_usd", 0),
+                    roi=result.get("roi_multiple_usd", 0),
+                    logo_path="temp_logo.png",
+                    token_symbol=result.get("token_symbol"),
+                    buy_count=result.get("buys", 0),
+                    sell_count=result.get("sells", 0),
+                )
+            else:
+                create_card(
+                    result.get("token_name"),
+                    wallet,
+                    result.get("net_position", 0),
+                    result.get("cost_sol", 0),
+                    result.get("value_sol", 0),
+                    result.get("profit_sol", 0),
+                    result.get("roi_multiple", 1),
+                    logo_path=result.get("logo_path"),
+                    token_symbol=result.get("token_symbol"),
+                    buy_count=result.get("buys", 0),
+                    sell_count=result.get("sells", 0),
+                    sol_price_usd=result.get("sol_price_usd", 0),
+                )
 
             with open("position_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
 
-            await update.message.reply_text(build_scan_report(result, wallet))
+            await update.message.reply_text(build_scan_report(result, wallet, chain))
 
         except Exception as e:
             import traceback
             await update.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
-
     else:
         context.user_data["mode"] = "scan"
         await update.message.reply_text("Send wallet address to scan ⏳")
-
 
 # =========================
 # /share
@@ -103,14 +117,24 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chain = "eth" if wallet.startswith("0x") else "sol"
             result = scan_wallet(wallet, chain=chain)
 
-            create_minimal_card(
-                result.get("token_name"),
-                result.get("profit_sol", 0),
-                result.get("roi_multiple", 1),
-                logo_path=result.get("logo_path"),
-                token_symbol=result.get("token_symbol"),
-                sol_price_usd=result.get("sol_price_usd", 0),
-            )
+            if chain == "eth":
+                from image_card import create_minimal_eth_card
+                create_minimal_eth_card(
+                    token_name=result.get("token_name"),
+                    profit_usd=result.get("current_profit_usd", 0),
+                    roi=result.get("roi_multiple_usd", 0),
+                    logo_path="temp_logo.png",
+                    token_symbol=result.get("token_symbol"),
+                )
+            else:
+                create_minimal_card(
+                    result.get("token_name"),
+                    result.get("profit_sol", 0),
+                    result.get("roi_multiple", 1),
+                    logo_path=result.get("logo_path"),
+                    token_symbol=result.get("token_symbol"),
+                    sol_price_usd=result.get("sol_price_usd", 0),
+                )
 
             with open("minimal_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
@@ -120,13 +144,37 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             import traceback
             await update.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
-
     else:
         context.user_data["mode"] = "share"
         await update.message.reply_text("Send wallet address to generate share card ⏳")
 
-def build_scan_report(result, wallet):
-    return f"""
+def build_scan_report(result, wallet, chain="sol"):
+    if chain == "eth":
+        return f"""
+ETH WALLET SUMMARY
+
+Token: {result.get('token_name')} (${result.get('token_symbol')})
+Wallet: {wallet}
+
+ACTIVITY
+{result.get('buys', 0)} Buys | {result.get('sells', 0)} Sells | {result.get('transfers_out', 0)} Transfers Out
+
+POSITION
+Net Position: {result.get('net_position', 0)} tokens
+
+CAPITAL (USD)
+Cost: ${result.get('total_usd_spent', 0)}
+Value: ${result.get('value_usd', 0)}
+Break-Even Remaining: ${result.get('break_even_remaining_usd', 0)}
+
+PERFORMANCE
+Profit: ${result.get('current_profit_usd', 0)}
+ROI: {result.get('roi_multiple_usd', 0)}x
+
+Token Price: ${result.get('token_price_usd', 0)}
+"""
+    else:
+        return f"""
 SOL WALLET SUMMARY
 
 Token: {result.get('token_name')} (${result.get('token_symbol')})
