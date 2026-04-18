@@ -592,7 +592,6 @@ def get_etherscan_internal_by_hash(tx_hash):
 
     data = etherscan_get(url)
     result = data.get("result", [])
-    print(f"INTERNAL TX DEBUG: hash={tx_hash[:10]} status={data.get('status')} message={data.get('message')} count={len(result) if isinstance(result, list) else 'NOT_LIST'}")
     return result if isinstance(result, list) else []
 
 
@@ -1093,7 +1092,6 @@ def ethereum_scan(wallet):
 
             recovery = get_actual_eth_recovery_for_sell_hash(wallet, out_hash, weth_receipts_by_hash)
             eth_recovered_on_sells += recovery["total"]
-            print(f"SELL DEBUG: hash={out_hash[:10]} native={recovery['native_eth']} weth={recovery['weth']} total={recovery['total']}")
 
             eth_usd = get_eth_usd_price_for_timestamp(timestamp, price_cache) if timestamp else 0.0
             total_usd_recovered += recovery["total"] * eth_usd
