@@ -1157,7 +1157,12 @@ def ethereum_scan(wallet):
 
     current_value_usd = net_position * token_price_usd
     current_profit_usd = current_value_usd - break_even_remaining_usd
-    roi_multiple_usd = (current_profit_usd / break_even_remaining_usd) if break_even_remaining_usd > 0 else 0
+    if break_even_remaining_usd > 0:
+        roi_multiple_usd = current_profit_usd / break_even_remaining_usd
+    elif total_usd_spent > 0:
+        roi_multiple_usd = (total_usd_recovered + current_value_usd - total_usd_spent) / total_usd_spent
+    else:
+        roi_multiple_usd = 0
 
     print("\n" + "=" * 50)
     print("ETH WALLET SUMMARY")
