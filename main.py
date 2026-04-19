@@ -1,4 +1,5 @@
 import os
+import time
 from telegram import (
     Update,
     ReplyKeyboardMarkup,
@@ -72,6 +73,7 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             track_event("scan", user_id, wallet)
             chain = "eth" if wallet.startswith("0x") else "sol"
+            start_time = time.time()
             result = scan_wallet(wallet, chain=chain)
 
             if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
@@ -116,6 +118,8 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_photo(photo=img)
 
             await update.message.reply_text(build_scan_report(result, wallet, chain))
+            elapsed = round(time.time() - start_time, 1)
+            await update.message.reply_text(f"✅ Scan completed in {elapsed}s")
 
         except Exception as e:
             print(f"Scan error: {e}")
@@ -145,6 +149,7 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             track_event("share", user_id, wallet)
             chain = "eth" if wallet.startswith("0x") else "sol"
+            start_time = time.time()
             result = scan_wallet(wallet, chain=chain)
 
             if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
@@ -176,6 +181,8 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             with open("minimal_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
 
+            elapsed = round(time.time() - start_time, 1)
+            await update.message.reply_text(f"✅ Card generated in {elapsed}s")
             await send_trending(update)
 
         except Exception as e:
@@ -336,6 +343,8 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 with open("position_card.png", "rb") as img:
                     await update.message.reply_photo(photo=img)
                 await update.message.reply_text(build_scan_report(result, wallet, chain))
+                elapsed = round(time.time() - start_time, 1)
+                await update.message.reply_text(f"✅ Scan completed in {elapsed}s")
 
             except Exception as e:
                 print(f"Scan error: {e}")
@@ -352,6 +361,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             try:
                 track_event("share", user_id, wallet)
                 chain = "eth" if wallet.startswith("0x") else "sol"
+                start_time = time.time()
                 result = scan_wallet(wallet, chain=chain)
 
                 if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
@@ -413,6 +423,7 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         try:
             track_event("scan", user_id, wallet)
             chain = "eth" if wallet.startswith("0x") else "sol"
+            start_time = time.time()
             result = scan_wallet(wallet, chain=chain)
 
             if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
@@ -457,6 +468,8 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.message.reply_photo(photo=img)
 
             await query.message.reply_text(build_scan_report(result, wallet, chain))
+            elapsed = round(time.time() - start_time, 1)
+            await query.message.reply_text(f"✅ Scan completed in {elapsed}s")
 
         except Exception as e:
             print(f"Scan error: {e}")
