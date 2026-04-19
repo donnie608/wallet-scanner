@@ -110,8 +110,14 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(build_scan_report(result, wallet, chain))
 
         except Exception as e:
-            import traceback
-            await update.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
+            print(f"Scan error: {e}")
+            await update.message.reply_text(
+                "❌ Scan failed. Please check:\n\n"
+                "• Is the wallet address correct?\n"
+                "• SOL wallets start with a letter or number\n"
+                "• ETH wallets start with 0x\n\n"
+                "If the address is correct, try again in a minute — the server may be busy."
+            )
 
     else:
         context.user_data["mode"] = "scan"
@@ -157,8 +163,14 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await send_trending(update)
 
         except Exception as e:
-            import traceback
-            await update.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
+            print(f"Share error: {e}")
+            await update.message.reply_text(
+                "❌ Card generation failed. Please check:\n\n"
+                "• Is the wallet address correct?\n"
+                "• SOL wallets start with a letter or number\n"
+                "• ETH wallets start with 0x\n\n"
+                "If the address is correct, try again in a minute — the server may be busy."
+            )
 
     else:
         context.user_data["mode"] = "share"
@@ -302,9 +314,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await update.message.reply_text(build_scan_report(result, wallet, chain))
 
-            except Exception as e:
-                import traceback
-                await update.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
+        except Exception as e:
+            print(f"Scan error: {e}")
+            await update.message.reply_text(
+                "❌ Scan failed. Please check:\n\n"
+                "• Is the wallet address correct?\n"
+                "• SOL wallets start with a letter or number\n"
+                "• ETH wallets start with 0x\n\n"
+                "If the address is correct, try again in a minute — the server may be busy."
+            )
 
         elif mode == "share":
             await update.message.reply_text("Share Scan Triggered ⏳")
@@ -337,10 +355,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await send_trending(update)
 
-            except Exception as e:
-                import traceback
-                await update.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
-
+        except Exception as e:
+            print(f"Scan error: {e}")
+            await update.message.reply_text(
+                "❌ Scan failed. Please check:\n\n"
+                "• Is the wallet address correct?\n"
+                "• SOL wallets start with a letter or number\n"
+                "• ETH wallets start with 0x\n\n"
+                "If the address is correct, try again in a minute — the server may be busy."
+            )
 
 # =========================
 # CALLBACK HANDLER (NEW)
@@ -398,8 +421,14 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.message.reply_text(build_scan_report(result, wallet, chain))
 
         except Exception as e:
-            import traceback
-            await query.message.reply_text(f"Error: {str(e)}\n{traceback.format_exc()}")
+            print(f"Share error: {e}")
+            await update.message.reply_text(
+                "❌ Card generation failed. Please check:\n\n"
+                "• Is the wallet address correct?\n"
+                "• SOL wallets start with a letter or number\n"
+                "• ETH wallets start with 0x\n\n"
+                "If the address is correct, try again in a minute — the server may be busy."
+            )
 
 
 # =========================
