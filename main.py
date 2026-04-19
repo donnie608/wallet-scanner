@@ -74,6 +74,14 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chain = "eth" if wallet.startswith("0x") else "sol"
             result = scan_wallet(wallet, chain=chain)
 
+            if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
+                await update.message.reply_text(
+                    "⚠️ No activity found for this wallet.\n\n"
+                    "• Double check the wallet address\n"
+                    "• Make sure it has traded the target token"
+                )
+                return
+
             if chain == "eth":
                 create_eth_card(
                     token_name=result.get("token_name"),
@@ -138,6 +146,14 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
             track_event("share", user_id, wallet)
             chain = "eth" if wallet.startswith("0x") else "sol"
             result = scan_wallet(wallet, chain=chain)
+
+            if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
+                await update.message.reply_text(
+                    "⚠️ No activity found for this wallet.\n\n"
+                    "• Double check the wallet address\n"
+                    "• Make sure it has traded the target token"
+                )
+                return
 
             if chain == "eth":
                 create_minimal_eth_card(
@@ -278,6 +294,14 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 track_event("scan", user_id, wallet)
                 chain = "eth" if wallet.startswith("0x") else "sol"
                 result = scan_wallet(wallet, chain=chain)
+
+            if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
+                await update.message.reply_text(
+                    "⚠️ No activity found for this wallet.\n\n"
+                    "• Double check the wallet address\n"
+                    "• Make sure it has traded the target token"
+                )
+                return
 
                 if chain == "eth":
                     create_eth_card(
