@@ -424,8 +424,6 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
 
             if chain == "eth":
-
-            if chain == "eth":
                 create_eth_card(
                     token_name=result.get("token_name"),
                     wallet=wallet,
