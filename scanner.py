@@ -1145,7 +1145,12 @@ def ethereum_scan(wallet):
             pass
 
     # Position includes bought tokens, received transfers, sells, and transfers out
-    net_position = total_bought + total_received_transfer_in - total_sold - total_transferred_out
+  # Use actual on-chain balance instead of calculated position
+    actual_balance = get_eth_token_balance(wallet, ETH_TARGET_TOKEN)
+    if actual_balance is not None:
+        net_position = actual_balance
+    else:
+        net_position = total_bought + total_received_transfer_in - total_sold - total_transferred_out
 
     total_eth_spent = native_spent_on_buys + weth_spent_on_buys + total_gas_fees
     total_eth_recovered = eth_recovered_on_sells
