@@ -311,19 +311,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 with open("position_card.png", "rb") as img:
                     await update.message.reply_photo(photo=img)
-
                 await update.message.reply_text(build_scan_report(result, wallet, chain))
 
-        except Exception as e:
-            print(f"Scan error: {e}")
-            await update.message.reply_text(
-                "❌ Scan failed. Please check:\n\n"
-                "• Is the wallet address correct?\n"
-                "• SOL wallets start with a letter or number\n"
-                "• ETH wallets start with 0x\n\n"
-                "If the address is correct, try again in a minute — the server may be busy."
-            )
-
+            except Exception as e:
+                print(f"Scan error: {e}")
+                await update.message.reply_text(
+                    "❌ Scan failed. Please check:\n\n"
+                    "• Is the wallet address correct?\n"
+                    "• SOL wallets start with a letter or number\n"
+                    "• ETH wallets start with 0x\n\n"
+                    "If the address is correct, try again in a minute — the server may be busy."
+                )
         elif mode == "share":
             await update.message.reply_text("Share Scan Triggered ⏳")
 
