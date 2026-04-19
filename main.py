@@ -362,8 +362,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
 
-            if chain == "eth":
-
                 if chain == "eth":
                     create_minimal_eth_card(
                         token_name=result.get("token_name"),
