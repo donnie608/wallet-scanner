@@ -856,6 +856,30 @@ def get_actual_eth_recovery_for_sell_hash(wallet, sell_hash, weth_receipts_by_ha
         "weth": recovered_weth,
         "total": recovered_native + recovered_weth,
     }
+def get_eth_token_balance(wallet, contract_address):
+    if not ETHERSCAN_API_KEY:
+        return None
+
+    url = (
+        "https://api.etherscan.io/v2/api"
+        f"?chainid={ETHERSCAN_CHAIN_ID}"
+        f"&module=account&action=tokenbalance"
+        f"&contractaddress={contract_address}"
+        f"&address={wallet}"
+        f"&tag=latest"
+        f"&apikey={ETHERSCAN_API_KEY}"
+    )
+
+    data = etherscan_get(url)
+    result = data.get("result", "0")
+
+    try:
+        return int(result) / (10 ** 18)
+    except Exception:
+        return None
+
+
+def get_best_eth_timestamp(normal_tx=None, raw_tx=None):
 
 def get_best_eth_timestamp(normal_tx=None, raw_tx=None):
     if normal_tx:
