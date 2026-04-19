@@ -353,9 +353,9 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 await send_trending(update)
 
-        except Exception as e:
-            print(f"Scan error: {e}")
-            await update.message.reply_text(
+            except Exception as e:
+                print(f"Scan error: {e}")
+                await update.message.reply_text(
                 "❌ Scan failed. Please check:\n\n"
                 "• Is the wallet address correct?\n"
                 "• SOL wallets start with a letter or number\n"
