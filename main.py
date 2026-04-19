@@ -356,11 +356,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 print(f"Scan error: {e}")
                 await update.message.reply_text(
-                "❌ Scan failed. Please check:\n\n"
-                "• Is the wallet address correct?\n"
-                "• SOL wallets start with a letter or number\n"
-                "• ETH wallets start with 0x\n\n"
-                "If the address is correct, try again in a minute — the server may be busy."
+                    "❌ Scan failed. Please check:\n\n"
+                    "• Is the wallet address correct?\n"
+                    "• SOL wallets start with a letter or number\n"
+                    "• ETH wallets start with 0x\n\n"
+                    "If the address is correct, try again in a minute — the server may be busy."
             )
 
 # =========================
