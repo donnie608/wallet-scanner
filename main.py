@@ -354,6 +354,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chain = "eth" if wallet.startswith("0x") else "sol"
                 result = scan_wallet(wallet, chain=chain)
 
+            if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
+                await query.message.reply_text(
+                    "⚠️ No activity found for this wallet.\n\n"
+                    "• Double check the wallet address\n"
+                    "• Make sure it has traded the target token"
+                )
+                return
+
+            if chain == "eth":
+
                 if chain == "eth":
                     create_minimal_eth_card(
                         token_name=result.get("token_name"),
@@ -407,6 +417,16 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             chain = "eth" if wallet.startswith("0x") else "sol"
             result = scan_wallet(wallet, chain=chain)
 
+            if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
+                await query.message.reply_text(
+                    "⚠️ No activity found for this wallet.\n\n"
+                    "• Double check the wallet address\n"
+                    "• Make sure it has traded the target token"
+                )
+                return
+
+            if chain == "eth":
+
             if chain == "eth":
                 create_eth_card(
                     token_name=result.get("token_name"),
@@ -443,9 +463,9 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.message.reply_text(build_scan_report(result, wallet, chain))
 
         except Exception as e:
-            print(f"Share error: {e}")
-            await update.message.reply_text(
-                "❌ Card generation failed. Please check:\n\n"
+            print(f"Scan error: {e}")
+            await query.message.reply_text(
+                "❌ Scan failed. Please check:\n\n"
                 "• Is the wallet address correct?\n"
                 "• SOL wallets start with a letter or number\n"
                 "• ETH wallets start with 0x\n\n"
