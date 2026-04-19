@@ -878,9 +878,6 @@ def get_eth_token_balance(wallet, contract_address):
     except Exception:
         return None
 
-
-def get_best_eth_timestamp(normal_tx=None, raw_tx=None):
-
 def get_best_eth_timestamp(normal_tx=None, raw_tx=None):
     if normal_tx:
         try:
