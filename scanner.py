@@ -393,10 +393,12 @@ def solana_scan(wallet):
     current_value_sol = net_position * price_sol
     unrealized_profit = current_value_sol - net_cost
 
-    if net_cost > 0:
-        roi_multiple = unrealized_profit / net_cost
-    elif sol_spent > 0:
-        roi_multiple = (sol_received - sol_spent) / sol_spent
+    sol_total_spent_usd = sol_spent * sol_price_usd
+    sol_total_recovered_usd = sol_received * sol_price_usd
+    sol_current_value_usd = current_value_sol * sol_price_usd
+
+    if sol_total_spent_usd > 0:
+        roi_multiple = (sol_total_recovered_usd + sol_current_value_usd) / sol_total_spent_usd
     else:
         roi_multiple = 0
 
