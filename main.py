@@ -39,7 +39,14 @@ def get_keyboard():
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Welcome to BOWS 🐷\n\nChoose an option:",
+        "Welcome to BOWS 🐷 - Big Oinker's Scanner Wallet\n\n"
+        "Scan any SOL or ETH wallet instantly.\n\n"
+        "How to use:\n"
+        "• Tap 🔍 Scan Wallet and paste an address\n"
+        "• Tap 📤 Create Shareable Card for a share image\n"
+        "• Or use /scan or /share followed by a wallet address\n\n"
+        "SOL wallets start with a letter/number\n"
+        "ETH wallets start with 0x",
         reply_markup=get_keyboard(),
     )
 
