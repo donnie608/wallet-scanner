@@ -159,7 +159,6 @@ Token: {result.get('token_name')} (${result.get('token_symbol')})
 Wallet: {wallet}
 
 ACTIVITY
-ACTIVITY
 {result.get('buys', 0)} Buys | {result.get('sells', 0)} Sells | {result.get('received_transfers', 0)} Transfers In | {result.get('transfers_out', 0)} Transfers Out
 
 POSITION
