@@ -4,7 +4,6 @@ import requests
 import os
 import json
 import time
-from image_card import create_card
 from PIL import Image
 from io import BytesIO
 
