@@ -295,11 +295,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 chain = "eth" if wallet.startswith("0x") else "sol"
                 result = scan_wallet(wallet, chain=chain)
 
-            if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
-                await update.message.reply_text(
-                    "⚠️ No activity found for this wallet.\n\n"
-                    "• Double check the wallet address\n"
-                    "• Make sure it has traded the target token"
+                if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
+                    await update.message.reply_text(
+                        "⚠️ No activity found for this wallet.\n\n"
+                        "• Double check the wallet address\n"
+                        "• Make sure it has traded the target token"
                 )
                 return
 
