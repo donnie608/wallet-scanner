@@ -39,14 +39,22 @@ def get_keyboard():
 # =========================
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Welcome to BOWS 🐷 - Big Oinker's Scanner Wallet\n\n"
+        "Welcome to BOWS 🐷 - Big Oinker's Wallet Scanner\n\n"
         "Scan any SOL or ETH wallet instantly.\n\n"
         "How to use:\n"
-        "• Tap 🔍 Scan Wallet and paste an address\n"
-        "• Tap 📤 Create Shareable Card for a share image\n"
-        "• Or use /scan or /share followed by a wallet address\n\n"
-        "SOL wallets start with a letter/number\n"
-        "ETH wallets start with 0x",
+        "• 🔍 Scan Wallet — paste an address to see your full position, cost, value, profit & ROI\n"
+        "• 📤 Create Shareable Card — generate a minimal image card to share your ROI\n"
+        "• 🔥 Trending — see the most scanned wallets in the past 2 hours\n"
+        "• 📊 Stats — view bot usage analytics\n\n"
+        "You can also type /scan or /share followed by a wallet address.\n\n"
+        "SOL wallets start with a letter or number\n"
+        "ETH wallets start with 0x\n\n"
+        "How to read your results:\n"
+        "• Cost — total USD/SOL you spent buying\n"
+        "• Value — what your tokens are worth right now\n"
+        "• Break-Even — how much you still need to recover (negative = you're already in profit from sells)\n"
+        "• Profit — value + sells minus cost\n"
+        "• ROI — your total return if you sold everything now (2x = doubled your money, 0.5x = lost half)",
         reply_markup=get_keyboard(),
     )
 
