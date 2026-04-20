@@ -550,12 +550,12 @@ def create_minimal_eth_card(token_name, profit_usd, roi,
     draw.text((x, y), roi_text, font=roi_font, fill=roi_color)
 
     # PRICES
-     try:
+    try:
         price_font = ImageFont.truetype(font_path, 32)
     except:
-        price_font = ImageFont.load_default()                             
+        price_font = ImageFont.load_default()
     price_text = f"Avg: ${avg_buy_price:.6f}  |  Now: ${current_price:.6f}"
-    bbox = draw.textbbox((0, 0), price_text, font=sub_font)
+    bbox = draw.textbbox((0, 0), price_text, font=price_font)
     draw.text(
         ((width - (bbox[2] - bbox[0])) // 2, y + h + 60),
         price_text, font=price_font, fill=roi_color
