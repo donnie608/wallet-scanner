@@ -231,6 +231,7 @@ Token Price: ${result.get('token_price_usd', 0)}
         return f"""
 SOL WALLET SUMMARY
 
+Avg Buy Price: ${result.get('avg_buy_price_usd', 0)}
 Token: {result.get('token_name')} (${result.get('token_symbol')})
 Wallet: {wallet}
 
