@@ -167,6 +167,8 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     roi=result.get("roi_multiple_usd", 0),
                     logo_path="temp_logo.png",
                     token_symbol=result.get("token_symbol"),
+                    avg_buy_price=result.get("avg_buy_price_usd", 0),
+                    current_price=result.get("token_price_usd", 0),
                 )
             else:
                 create_minimal_card(
@@ -373,13 +375,15 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 return
 
                 if chain == "eth":
-                    create_minimal_eth_card(
-                        token_name=result.get("token_name"),
-                        profit_usd=result.get("current_profit_usd", 0),
-                        roi=result.get("roi_multiple_usd", 0),
-                        logo_path="temp_logo.png",
-                        token_symbol=result.get("token_symbol"),
-                    )
+                   create_minimal_eth_card(
+                    token_name=result.get("token_name"),
+                    profit_usd=result.get("current_profit_usd", 0),
+                    roi=result.get("roi_multiple_usd", 0),
+                    logo_path="temp_logo.png",
+                    token_symbol=result.get("token_symbol"),
+                    avg_buy_price=result.get("avg_buy_price_usd", 0),
+                    current_price=result.get("token_price_usd", 0),
+                )
                 else:
                     create_minimal_card(
                         result.get("token_name"),
