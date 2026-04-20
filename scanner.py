@@ -1188,7 +1188,8 @@ def ethereum_scan(wallet):
         roi_multiple_usd = (total_usd_recovered + current_value_usd) / total_usd_spent
     else:
         roi_multiple_usd = 0
-
+    avg_buy_price_usd = total_usd_spent / total_bought if total_bought > 0 else 0.0
+    
     print("\n" + "=" * 50)
     print("ETH WALLET SUMMARY")
     print("=" * 50)
@@ -1246,6 +1247,7 @@ def ethereum_scan(wallet):
         "current_profit_usd": round(current_profit_usd, 2),
         "roi_multiple_usd": round(roi_multiple_usd, 2),
         "token_price_usd": round(token_price_usd, 6),
+        "avg_buy_price_usd": round(avg_buy_price_usd, 8),
 
         # kept in return for internal use / future debugging
         "total_eth_spent": round(total_eth_spent, 12),
