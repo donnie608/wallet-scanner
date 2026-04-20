@@ -549,15 +549,13 @@ def create_minimal_eth_card(token_name, profit_usd, roi,
     draw.text((x, y + 10), roi_text, font=roi_font, fill=(0, 0, 0, 150))
     draw.text((x, y), roi_text, font=roi_font, fill=roi_color)
 
-    # PROFIT
-    sign = "+" if profit_usd > 0 else ""
-    profit_text = f"{sign}${profit_usd:.2f}"
-    bbox = draw.textbbox((0, 0), profit_text, font=sub_font)
+    # PRICES
+    price_text = f"Avg: ${avg_buy_price:.6f}  |  Now: ${current_price:.6f}"
+    bbox = draw.textbbox((0, 0), price_text, font=sub_font)
     draw.text(
         ((width - (bbox[2] - bbox[0])) // 2, y + h + 60),
-        profit_text, font=sub_font, fill=roi_color
+        price_text, font=sub_font, fill=roi_color
     )
-
     # TOKEN LOGO
     try:
         if logo_path and os.path.exists(logo_path):
