@@ -462,8 +462,8 @@ def create_eth_card(token_name, wallet, tokens, cost_usd, value_usd, profit_usd,
     img.save(output_path)
 
 def create_minimal_eth_card(token_name, profit_usd, roi,
-                             logo_path=None, token_symbol=None):
-
+                             logo_path=None, token_symbol=None,
+                             avg_buy_price=0, current_price=0):
     width, height = 800, 450
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     output_path = os.path.join(BASE_DIR, "minimal_card.png")
