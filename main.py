@@ -225,6 +225,7 @@ PERFORMANCE
 Profit: ${result.get('current_profit_usd', 0)}
 ROI: {result.get('roi_multiple_usd', 0)}x
 
+Avg Buy Price: ${result.get('avg_buy_price_usd', 0)}
 Token Price: ${result.get('token_price_usd', 0)}
 """
     else:
