@@ -547,6 +547,8 @@ def solana_scan(wallet):
     else:
         roi_multiple_usd = 0
 
+    unrealized_profit = current_value_sol - net_cost
+
     # SOL-denominated ROI (original formula, using spot price for value/recovered)
     sol_total_spent_usd = sol_spent * sol_price_usd
     sol_total_recovered_usd = sol_received * sol_price_usd
