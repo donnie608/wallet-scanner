@@ -237,6 +237,107 @@ def get_signatures_for_address(address, limit=1000):
         print("RPC SIGNATURE ERROR:", e)
         return []
 
+# =========================
+# SOL HISTORICAL PRICE CACHE
+# =========================
+SOL_PRICE_CACHE_FILE = "sol_price_cache.json"
+
+
+def load_sol_price_cache_from_disk():
+    if os.path.exists(SOL_PRICE_CACHE_FILE):
+        try:
+            with open(SOL_PRICE_CACHE_FILE, "r") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def save_sol_price_cache_to_disk(cache):
+    try:
+        with open(SOL_PRICE_CACHE_FILE, "w") as f:
+            json.dump(cache, f, indent=2)
+    except Exception as e:
+        print(f"Failed to save SOL price cache: {e}")
+
+
+def preload_sol_usd_prices(date_keys, price_cache):
+    valid_keys = [d for d in date_keys if d]
+    if not valid_keys:
+        return
+
+    # Load from disk cache first
+    disk_cache = load_sol_price_cache_from_disk()
+    price_cache.update(disk_cache)
+
+    # Only fetch dates not already cached
+    missing_keys = [dk for dk in valid_keys if dk not in price_cache]
+    if not missing_keys:
+        return
+
+    def date_key_to_ts(dk):
+        return int(time.mktime(time.strptime(dk, "%d-%m-%Y")))
+
+    timestamps = [date_key_to_ts(dk) for dk in missing_keys]
+    ts_end = max(timestamps) + 86400
+    ts_start = min(timestamps) - 86400
+    days_needed = int((ts_end - ts_start) / 86400) + 2
+
+    url = (
+        "https://min-api.cryptocompare.com/data/v2/histoday"
+        f"?fsym=SOL&tsym=USD&limit={days_needed}&toTs={ts_end}"
+    )
+
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    for attempt in range(3):
+        try:
+            res = requests.get(url, headers=headers, timeout=20)
+            data = res.json()
+
+            if data.get("Response") != "Success":
+                break
+
+            price_points = data.get("Data", {}).get("Data", [])
+            if not price_points:
+                break
+
+            range_prices = {}
+            for point in price_points:
+                dk = time.strftime("%d-%m-%Y", time.gmtime(point["time"]))
+                range_prices[dk] = point["close"]
+
+            for dk in missing_keys:
+                price_cache[dk] = range_prices.get(dk, 0.0)
+
+            # Save new prices to disk
+            disk_cache.update({dk: price_cache[dk] for dk in missing_keys})
+            save_sol_price_cache_to_disk(disk_cache)
+
+            return
+
+        except Exception as e:
+            wait = 5 + attempt * 5
+            time.sleep(wait)
+
+    # All attempts failed
+    for dk in missing_keys:
+        price_cache[dk] = 0.0
+
+
+def get_sol_date_key_from_timestamp(timestamp):
+    if not timestamp:
+        return None
+    return time.strftime("%d-%m-%Y", time.gmtime(int(timestamp)))
+
+
+def get_sol_usd_price_for_timestamp(timestamp, price_cache):
+    date_key = get_sol_date_key_from_timestamp(timestamp)
+    if not date_key:
+        return 0.0
+    return price_cache.get(date_key, 0.0)
+
+
 def solana_scan(wallet):
     if not HELIUS_API_KEY:
         raise ValueError("HELIUS_API_KEY not found in .env")
@@ -305,11 +406,17 @@ def solana_scan(wallet):
     transfer_in_signatures = set()
     transfer_out_signatures = set()
 
+    # Store SOL amounts per tx for USD conversion later
+    buy_sol_by_sig = {}
+    sell_sol_by_sig = {}
+    tx_timestamp_by_sig = {}
+
     SOL_TRADE_THRESHOLD = 0.01
 
     for tx in all_transactions:
         sig = tx.get("signature", "")
         sol_change = 0.0
+        tx_ts = tx.get("timestamp", 0)
 
         for acc in tx.get("accountData", []):
             if acc.get("account") == wallet:
@@ -348,6 +455,8 @@ def solana_scan(wallet):
                 total_bought += incoming_amount
                 sol_spent += abs(sol_change)
                 buy_count += 1
+                buy_sol_by_sig[sig] = abs(sol_change)
+                tx_timestamp_by_sig[sig] = tx_ts
             elif sig not in transfer_in_signatures:
                 transfer_in_signatures.add(sig)
                 transfer_in_count += 1
@@ -358,6 +467,8 @@ def solana_scan(wallet):
                 total_sold += outgoing_amount
                 sol_received += abs(sol_change)
                 sell_count += 1
+                sell_sol_by_sig[sig] = abs(sol_change)
+                tx_timestamp_by_sig[sig] = tx_ts
             elif sig not in transfer_out_signatures:
                 transfer_out_signatures.add(sig)
                 transfer_out_count += 1
@@ -371,6 +482,8 @@ def solana_scan(wallet):
                     total_bought += net_amount
                     sol_spent += abs(sol_change)
                     buy_count += 1
+                    buy_sol_by_sig[sig] = abs(sol_change)
+                    tx_timestamp_by_sig[sig] = tx_ts
                 elif sig not in transfer_in_signatures:
                     transfer_in_signatures.add(sig)
                     transfer_in_count += 1
@@ -381,9 +494,40 @@ def solana_scan(wallet):
                     total_sold += abs(net_amount)
                     sol_received += abs(sol_change)
                     sell_count += 1
+                    sell_sol_by_sig[sig] = abs(sol_change)
+                    tx_timestamp_by_sig[sig] = tx_ts
                 elif sig not in transfer_out_signatures:
                     transfer_out_signatures.add(sig)
                     transfer_out_count += 1
+
+    # =============================================
+    # HISTORICAL SOL/USD PRICES (Phase 1 upgrade)
+    # =============================================
+    sol_price_cache = {}
+    needed_date_keys = set()
+
+    for sig, ts in tx_timestamp_by_sig.items():
+        dk = get_sol_date_key_from_timestamp(ts)
+        if dk:
+            needed_date_keys.add(dk)
+
+    preload_sol_usd_prices(needed_date_keys, sol_price_cache)
+
+    # Calculate USD spent (buys) using historical SOL price per tx date
+    total_usd_spent = 0.0
+    for sig, sol_amount in buy_sol_by_sig.items():
+        ts = tx_timestamp_by_sig.get(sig, 0)
+        sol_usd = get_sol_usd_price_for_timestamp(ts, sol_price_cache) if ts else 0.0
+        total_usd_spent += sol_amount * sol_usd
+
+    # Calculate USD recovered (sells) using historical SOL price per tx date
+    total_usd_recovered = 0.0
+    for sig, sol_amount in sell_sol_by_sig.items():
+        ts = tx_timestamp_by_sig.get(sig, 0)
+        sol_usd = get_sol_usd_price_for_timestamp(ts, sol_price_cache) if ts else 0.0
+        total_usd_recovered += sol_amount * sol_usd
+
+    # Current position & token data
     net_position = get_wallet_token_balance(wallet, TARGET_TOKEN)
     net_cost = sol_spent - sol_received
 
@@ -391,16 +535,20 @@ def solana_scan(wallet):
     logo_path = download_logo(logo_candidates)
 
     current_value_sol = net_position * price_sol
-    unrealized_profit = current_value_sol - net_cost
+    current_value_usd = net_position * price_usd
 
-    sol_total_spent_usd = sol_spent * sol_price_usd
-    sol_total_recovered_usd = sol_received * sol_price_usd
-    sol_current_value_usd = current_value_sol * sol_price_usd
+    # USD performance metrics (matching ETH logic)
+    break_even_remaining_usd = total_usd_spent - total_usd_recovered
+    current_profit_usd = current_value_usd - break_even_remaining_usd
+    avg_buy_price_usd = total_usd_spent / total_bought if total_bought > 0 else 0.0
 
-    if sol_total_spent_usd > 0:
-        roi_multiple = (sol_total_recovered_usd + sol_current_value_usd) / sol_total_spent_usd
+    if total_usd_spent > 0:
+        roi_multiple_usd = (total_usd_recovered + current_value_usd) / total_usd_spent
     else:
-        roi_multiple = 0
+        roi_multiple_usd = 0
+
+    # Legacy SOL-denominated values (kept for backward compat)
+    unrealized_profit = current_value_sol - net_cost
 
     print("\n" + "=" * 50)
     print("SOL WALLET SUMMARY")
@@ -415,31 +563,36 @@ def solana_scan(wallet):
     print("\n--- POSITION ---")
     print(f"Net Position: {round(net_position, 2)} tokens")
 
-    print("\n--- CAPITAL ---")
-    print(f"SOL Spent: {round(sol_spent, 4)}")
-    print(f"SOL Recovered: {round(sol_received, 4)}")
-    print(f"Net Cost: {round(net_cost, 4)}")
-    print(f"Current Value: {round(current_value_sol, 4)}")
+    print("\n--- CAPITAL (USD) ---")
+    print(f"Total USD Spent: ${total_usd_spent:.2f}")
+    print(f"Total USD Recovered: ${total_usd_recovered:.2f}")
+    print(f"Break-Even Remaining: ${break_even_remaining_usd:.2f}")
+    print(f"Current Value: ${current_value_usd:.2f}")
 
-    print("\n--- PERFORMANCE ---")
-    print(f"PnL: {round(unrealized_profit, 4)} SOL")
-    print(f"ROI: {round(roi_multiple, 2)}x")
+    print("\n--- PERFORMANCE (USD) ---")
+    print(f"Profit If Sold Now: ${current_profit_usd:.2f}")
+    print(f"ROI: {round(roi_multiple_usd, 2)}x")
 
-    print(f"\nSOL Price: ${round(sol_price_usd, 2)}")
+    print(f"\nAvg Buy Price: ${avg_buy_price_usd:.6f}")
+    print(f"Token Price: ${price_usd:.8f}")
+    print(f"SOL Price: ${round(sol_price_usd, 2)}")
 
     create_card(
         token_name=token_name,
         wallet=wallet,
         tokens=round(net_position, 2),
-        cost=round(net_cost, 4),
-        value=round(current_value_sol, 4),
-        profit=round(unrealized_profit, 4),
-        roi=round(roi_multiple, 2),
+        roi=round(roi_multiple_usd, 2),
         logo_path=logo_path,
         token_symbol=token_symbol,
         buy_count=buy_count,
         sell_count=sell_count,
-        sol_price_usd=sol_price_usd
+        chain="sol",
+        cost_sol=round(net_cost, 4),
+        value_sol=round(current_value_sol, 4),
+        profit_sol=round(unrealized_profit, 4),
+        cost_usd=round(break_even_remaining_usd, 2),
+        value_usd=round(current_value_usd, 2),
+        profit_usd=round(current_profit_usd, 2),
     )
 
     print("\n--- CARD GENERATED ---")
@@ -449,16 +602,24 @@ def solana_scan(wallet):
         "token_name": token_name,
         "token_symbol": token_symbol,
         "net_position": round(net_position, 2),
-        "cost_sol": round(net_cost, 4),
-        "value_sol": round(current_value_sol, 4),
-        "profit_sol": round(unrealized_profit, 4),
-        "roi_multiple": round(roi_multiple, 2),
         "buys": buy_count,
         "sells": sell_count,
         "transfers_in": transfer_in_count,
         "transfers_out": transfer_out_count,
+        "total_usd_spent": round(total_usd_spent, 2),
+        "total_usd_recovered": round(total_usd_recovered, 2),
+        "break_even_remaining_usd": round(break_even_remaining_usd, 2),
+        "value_usd": round(current_value_usd, 2),
+        "current_profit_usd": round(current_profit_usd, 2),
+        "roi_multiple_usd": round(roi_multiple_usd, 2),
+        "avg_buy_price_usd": round(avg_buy_price_usd, 8),
+        "token_price_usd": round(price_usd, 8),
         "sol_price_usd": sol_price_usd,
-        "logo_path": logo_path
+        "logo_path": logo_path,
+        # Legacy SOL values kept for backward compat
+        "cost_sol": round(net_cost, 4),
+        "value_sol": round(current_value_sol, 4),
+        "profit_sol": round(unrealized_profit, 4),
     }
 
 # =========================
@@ -1216,7 +1377,7 @@ def ethereum_scan(wallet):
     print(f"Profit If Sold Now: ${current_profit_usd:.2f}")
     print(f"Return vs Break-Even Remaining: {round(roi_multiple_usd, 2)}x")
 
-    print(f"\nToken Price: ${round(token_price_usd, 6)}")
+    print(f"\nToken Price: ${token_price_usd:.8f}")
 
     create_eth_card(
         token_name=token_name,
