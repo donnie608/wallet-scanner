@@ -574,7 +574,7 @@ def solana_scan(wallet):
     print(f"ROI: {round(roi_multiple_usd, 2)}x")
 
     print(f"\nAvg Buy Price: ${avg_buy_price_usd:.6f}")
-    print(f"Token Price: ${price_usd:.8f}")
+    print(f"Token Price: ${round(price_usd, 6)}")
     print(f"SOL Price: ${round(sol_price_usd, 2)}")
 
     create_card(
@@ -609,7 +609,7 @@ def solana_scan(wallet):
         "current_profit_usd": round(current_profit_usd, 2),
         "roi_multiple_usd": round(roi_multiple_usd, 2),
         "avg_buy_price_usd": round(avg_buy_price_usd, 8),
-        "token_price_usd": round(price_usd, 8),
+        "token_price_usd": round(price_usd, 6),
         "sol_price_usd": sol_price_usd,
         "logo_path": logo_path,
         # Legacy SOL values kept for backward compat
@@ -1373,7 +1373,7 @@ def ethereum_scan(wallet):
     print(f"Profit If Sold Now: ${current_profit_usd:.2f}")
     print(f"Return vs Break-Even Remaining: {round(roi_multiple_usd, 2)}x")
 
-    print(f"\nToken Price: ${token_price_usd:.8f}")
+    print(f"\nToken Price: ${round(token_price_usd, 6)}")
 
     create_eth_card(
         token_name=token_name,
