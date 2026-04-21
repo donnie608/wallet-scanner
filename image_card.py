@@ -37,23 +37,10 @@ def reduce_opacity(img, opacity):
 # =========================
 # FULL CARD — NOW USD-BASED (used by both SOL and ETH)
 # =========================
-def create_card(
-    token_name,
-    wallet,
-    tokens,
-    roi,
-    logo_path=None,
-    token_symbol=None,
-    buy_count=0,
-    sell_count=0,
-    chain="sol",
-    cost_sol=0,
-    value_sol=0,
-    profit_sol=0,
-    cost_usd=0,
-    value_usd=0,
-    profit_usd=0,
-):
+def create_card(token_name, wallet, tokens, cost_usd, value_usd, profit_usd, roi,
+                logo_path=None, token_symbol=None,
+                buy_count=0, sell_count=0):
+
     tokens_str = format_compact(tokens)
     roi_str = format_number(roi, 2)
 
@@ -145,28 +132,18 @@ def create_card(
 
     draw.line((40, 140, width - 40, 140), fill=(120, 120, 160), width=2)
 
-    # VALUES
+    # VALUES — ALL USD
     draw.text((50, 170), "Tokens", fill=(200, 200, 220), font=label_font)
     draw.text((50, 205), tokens_str, fill=(255, 255, 255), font=value_font)
 
-    if chain == "sol":
-        draw.text((50, 270), "Cost (SOL)", fill=(200, 200, 220), font=label_font)
-        draw.text((50, 305), f"{cost_sol:.4f} SOL (${cost_usd:.2f})", fill=(255, 255, 255), font=value_font)
+    draw.text((50, 270), "Cost (USD)", fill=(200, 200, 220), font=label_font)
+    draw.text((50, 305), f"${cost_usd:.2f}", fill=(255, 255, 255), font=value_font)
 
-        draw.text((400, 170), "Value (SOL)", fill=(200, 200, 220), font=label_font)
-        draw.text((400, 205), f"{value_sol:.4f} SOL (${value_usd:.2f})", fill=(255, 255, 255), font=value_font)
+    draw.text((400, 170), "Value (USD)", fill=(200, 200, 220), font=label_font)
+    draw.text((400, 205), f"${value_usd:.2f}", fill=(255, 255, 255), font=value_font)
 
-        draw.text((400, 270), "Profit (SOL)", fill=(200, 200, 220), font=label_font)
-        draw.text((400, 305), f"{profit_sol:.4f} SOL (${profit_usd:.2f})", fill=profit_color, font=value_font)
-    else:
-        draw.text((50, 270), "Cost (USD)", fill=(200, 200, 220), font=label_font)
-        draw.text((50, 305), f"${cost_usd:.2f}", fill=(255, 255, 255), font=value_font)
-
-        draw.text((400, 170), "Value (USD)", fill=(200, 200, 220), font=label_font)
-        draw.text((400, 205), f"${value_usd:.2f}", fill=(255, 255, 255), font=value_font)
-
-        draw.text((400, 270), "Profit (USD)", fill=(200, 200, 220), font=label_font)
-        draw.text((400, 305), f"${profit_usd:.2f}", fill=profit_color, font=value_font)
+    draw.text((400, 270), "Profit (USD)", fill=(200, 200, 220), font=label_font)
+    draw.text((400, 305), f"${profit_usd:.2f}", fill=profit_color, font=value_font)
 
     # ROI
     pill_w, pill_h = 180, 70
@@ -205,11 +182,9 @@ def create_card(
 # =========================
 # MINIMAL CARD — NOW WITH AVG/CURRENT PRICE (used by both SOL and ETH)
 # =========================
-def create_minimal_card(token_name, profit, roi,
+def create_minimal_card(token_name, profit_usd, roi,
                         logo_path=None, token_symbol=None,
-                        sol_price_usd=0,
-                        avg_buy_price=0,
-                        current_price=0):
+                        avg_buy_price=0, current_price=0):
 
     width, height = 800, 450
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -268,12 +243,12 @@ def create_minimal_card(token_name, profit, roi,
 
     try:
         roi_font = ImageFont.truetype(font_path, 150)
+        sub_font = ImageFont.truetype(font_path, 42)
         title_font = ImageFont.truetype(font_path, 36)
-        price_font = ImageFont.truetype(font_path, 32)
     except:
         roi_font = ImageFont.load_default()
+        sub_font = ImageFont.load_default()
         title_font = ImageFont.load_default()
-        price_font = ImageFont.load_default()
 
     # HEADER
     title = f"{token_name} (${token_symbol})" if token_symbol else token_name
@@ -310,7 +285,11 @@ def create_minimal_card(token_name, profit, roi,
     draw.text((x, y+10), roi_text, font=roi_font, fill=(0,0,0,150))
     draw.text((x, y), roi_text, font=roi_font, fill=roi_color)
 
-    # PRICES
+    # PRICES (avg buy vs current — same as ETH minimal card)
+    try:
+        price_font = ImageFont.truetype(font_path, 32)
+    except:
+        price_font = ImageFont.load_default()
     price_text = f"Avg: ${avg_buy_price:.6f}  |  Now: ${current_price:.6f}"
     bbox = draw.textbbox((0, 0), price_text, font=price_font)
     draw.text(
@@ -340,6 +319,7 @@ def create_minimal_card(token_name, profit, roi,
         pass
 
     img.save(output_path)
+
 
 # =========================
 # ALIASES — keep old names working so nothing breaks
