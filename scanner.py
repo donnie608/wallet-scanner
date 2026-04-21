@@ -581,18 +581,14 @@ def solana_scan(wallet):
         token_name=token_name,
         wallet=wallet,
         tokens=round(net_position, 2),
+        cost_usd=round(total_usd_spent, 2),
+        value_usd=round(current_value_usd, 2),
+        profit_usd=round(current_profit_usd, 2),
         roi=round(roi_multiple_usd, 2),
         logo_path=logo_path,
         token_symbol=token_symbol,
         buy_count=buy_count,
         sell_count=sell_count,
-        chain="sol",
-        cost_sol=round(net_cost, 4),
-        value_sol=round(current_value_sol, 4),
-        profit_sol=round(unrealized_profit, 4),
-        cost_usd=round(break_even_remaining_usd, 2),
-        value_usd=round(current_value_usd, 2),
-        profit_usd=round(current_profit_usd, 2),
     )
 
     print("\n--- CARD GENERATED ---")
