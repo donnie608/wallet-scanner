@@ -51,8 +51,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "SOL wallets start with a letter or number\n"
         "ETH wallets start with 0x\n\n"
         "How to read your results:\n"
-        "• Cost — total USD/SOL you spent buying\n"
-        "• Value — what your tokens are worth right now\n"
+        "• Cost — total USD you spent buying (using historical prices)\n"
+        "• Value — what your tokens are worth right now in USD\n"
         "• Break-Even — how much you still need to recover (negative = you're already in profit from sells)\n"
         "• Profit — value + sells minus cost\n"
         "• ROI — your total return if you sold everything now (2x = doubled your money, 0.5x = lost half)",
@@ -84,35 +84,20 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
 
-            if chain == "eth":
-                create_eth_card(
-                    token_name=result.get("token_name"),
-                    wallet=wallet,
-                    tokens=result.get("net_position", 0),
-                    cost_usd=result.get("total_usd_spent", 0),
-                    value_usd=result.get("value_usd", 0),
-                    profit_usd=result.get("current_profit_usd", 0),
-                    roi=result.get("roi_multiple_usd", 0),
-                    logo_path="temp_logo.png",
-                    token_symbol=result.get("token_symbol"),
-                    buy_count=result.get("buys", 0),
-                    sell_count=result.get("sells", 0),
-                )
-            else:
-                create_card(
-                    result.get("token_name"),
-                    wallet,
-                    result.get("net_position", 0),
-                    result.get("cost_sol", 0),
-                    result.get("value_sol", 0),
-                    result.get("profit_sol", 0),
-                    result.get("roi_multiple", 1),
-                    logo_path=result.get("logo_path"),
-                    token_symbol=result.get("token_symbol"),
-                    buy_count=result.get("buys", 0),
-                    sell_count=result.get("sells", 0),
-                    sol_price_usd=result.get("sol_price_usd", 0),
-                )
+            # Both chains now use USD-based card
+            create_card(
+                token_name=result.get("token_name"),
+                wallet=wallet,
+                tokens=result.get("net_position", 0),
+                cost_usd=result.get("total_usd_spent", 0),
+                value_usd=result.get("value_usd", 0),
+                profit_usd=result.get("current_profit_usd", 0),
+                roi=result.get("roi_multiple_usd", 0),
+                logo_path=result.get("logo_path") or "temp_logo.png",
+                token_symbol=result.get("token_symbol"),
+                buy_count=result.get("buys", 0),
+                sell_count=result.get("sells", 0),
+            )
 
             with open("position_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
@@ -160,25 +145,16 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
 
-            if chain == "eth":
-                create_minimal_eth_card(
-                    token_name=result.get("token_name"),
-                    profit_usd=result.get("current_profit_usd", 0),
-                    roi=result.get("roi_multiple_usd", 0),
-                    logo_path="temp_logo.png",
-                    token_symbol=result.get("token_symbol"),
-                    avg_buy_price=result.get("avg_buy_price_usd", 0),
-                    current_price=result.get("token_price_usd", 0),
-                )
-            else:
-                create_minimal_card(
-                    result.get("token_name"),
-                    result.get("profit_sol", 0),
-                    result.get("roi_multiple", 1),
-                    logo_path=result.get("logo_path"),
-                    token_symbol=result.get("token_symbol"),
-                    sol_price_usd=result.get("sol_price_usd", 0),
-                )
+            # Both chains now use the same minimal card
+            create_minimal_card(
+                token_name=result.get("token_name"),
+                profit_usd=result.get("current_profit_usd", 0),
+                roi=result.get("roi_multiple_usd", 0),
+                logo_path=result.get("logo_path") or "temp_logo.png",
+                token_symbol=result.get("token_symbol"),
+                avg_buy_price=result.get("avg_buy_price_usd", 0),
+                current_price=result.get("token_price_usd", 0),
+            )
 
             with open("minimal_card.png", "rb") as img:
                 await update.message.reply_photo(photo=img)
@@ -203,15 +179,16 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def build_scan_report(result, wallet, chain="sol"):
-    if chain == "eth":
-        return f"""
-ETH WALLET SUMMARY
+    # Both chains now share the same USD-based report format
+    chain_label = "ETH" if chain == "eth" else "SOL"
+    return f"""
+{chain_label} WALLET SUMMARY
 
 Token: {result.get('token_name')} (${result.get('token_symbol')})
 Wallet: {wallet}
 
 ACTIVITY
-{result.get('buys', 0)} Buys | {result.get('sells', 0)} Sells | {result.get('received_transfers', 0)} Transfers In | {result.get('transfers_out', 0)} Transfers Out
+{result.get('buys', 0)} Buys | {result.get('sells', 0)} Sells | {result.get('transfers_in', result.get('received_transfers', 0))} Transfers In | {result.get('transfers_out', 0)} Transfers Out
 
 POSITION
 Net Position: {result.get('net_position', 0)} tokens
@@ -227,30 +204,6 @@ ROI: {result.get('roi_multiple_usd', 0)}x
 
 Avg Buy Price: ${result.get('avg_buy_price_usd', 0)}
 Token Price: ${result.get('token_price_usd', 0)}
-"""
-    else:
-        return f"""
-SOL WALLET SUMMARY
-
-Avg Buy Price: ${result.get('avg_buy_price_usd', 0)}
-Token: {result.get('token_name')} (${result.get('token_symbol')})
-Wallet: {wallet}
-
-ACTIVITY
-{result.get('buys', 0)} Buys | {result.get('sells', 0)} Sells | {result.get('transfers_in', 0)} Transfers In | {result.get('transfers_out', 0)} Transfers Out
-
-POSITION
-Net Position: {result.get('net_position', 0)} tokens
-
-CAPITAL
-Net Cost: {result.get('cost_sol', 0)} SOL
-Current Value: {result.get('value_sol', 0)} SOL
-
-PERFORMANCE
-PnL: {result.get('profit_sol', 0)} SOL
-ROI: {result.get('roi_multiple', 0)}x
-
-SOL Price: ${round(result.get('sol_price_usd', 0), 2)}
 """
 
 
@@ -304,6 +257,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             try:
                 track_event("scan", user_id, wallet)
                 chain = "eth" if wallet.startswith("0x") else "sol"
+                start_time = time.time()
                 result = scan_wallet(wallet, chain=chain)
 
                 if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
@@ -311,38 +265,22 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                         "⚠️ No activity found for this wallet.\n\n"
                         "• Double check the wallet address\n"
                         "• Make sure it has traded the target token"
-                )
-                return
+                    )
+                    return
 
-                if chain == "eth":
-                    create_eth_card(
-                        token_name=result.get("token_name"),
-                        wallet=wallet,
-                        tokens=result.get("net_position", 0),
-                        cost_usd=result.get("total_usd_spent", 0),
-                        value_usd=result.get("value_usd", 0),
-                        profit_usd=result.get("current_profit_usd", 0),
-                        roi=result.get("roi_multiple_usd", 0),
-                        logo_path="temp_logo.png",
-                        token_symbol=result.get("token_symbol"),
-                        buy_count=result.get("buys", 0),
-                        sell_count=result.get("sells", 0),
-                    )
-                else:
-                    create_card(
-                        result.get("token_name"),
-                        wallet,
-                        result.get("net_position", 0),
-                        result.get("cost_sol", 0),
-                        result.get("value_sol", 0),
-                        result.get("profit_sol", 0),
-                        result.get("roi_multiple", 1),
-                        logo_path=result.get("logo_path"),
-                        token_symbol=result.get("token_symbol"),
-                        buy_count=result.get("buys", 0),
-                        sell_count=result.get("sells", 0),
-                        sol_price_usd=result.get("sol_price_usd", 0),
-                    )
+                create_card(
+                    token_name=result.get("token_name"),
+                    wallet=wallet,
+                    tokens=result.get("net_position", 0),
+                    cost_usd=result.get("total_usd_spent", 0),
+                    value_usd=result.get("value_usd", 0),
+                    profit_usd=result.get("current_profit_usd", 0),
+                    roi=result.get("roi_multiple_usd", 0),
+                    logo_path=result.get("logo_path") or "temp_logo.png",
+                    token_symbol=result.get("token_symbol"),
+                    buy_count=result.get("buys", 0),
+                    sell_count=result.get("sells", 0),
+                )
 
                 with open("position_card.png", "rb") as img:
                     await update.message.reply_photo(photo=img)
@@ -359,6 +297,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "• ETH wallets start with 0x\n\n"
                     "If the address is correct, try again in a minute — the server may be busy."
                 )
+
         elif mode == "share":
             await update.message.reply_text("Share Scan Triggered ⏳")
 
@@ -369,36 +308,28 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 result = scan_wallet(wallet, chain=chain)
 
                 if result.get("buys", 0) == 0 and result.get("sells", 0) == 0 and result.get("net_position", 0) == 0:
-                    await query.message.reply_text(
+                    await update.message.reply_text(
                         "⚠️ No activity found for this wallet.\n\n"
                         "• Double check the wallet address\n"
                         "• Make sure it has traded the target token"
-                )
-                return
+                    )
+                    return
 
-                if chain == "eth":
-                   create_minimal_eth_card(
+                create_minimal_card(
                     token_name=result.get("token_name"),
                     profit_usd=result.get("current_profit_usd", 0),
                     roi=result.get("roi_multiple_usd", 0),
-                    logo_path="temp_logo.png",
+                    logo_path=result.get("logo_path") or "temp_logo.png",
                     token_symbol=result.get("token_symbol"),
                     avg_buy_price=result.get("avg_buy_price_usd", 0),
                     current_price=result.get("token_price_usd", 0),
                 )
-                else:
-                    create_minimal_card(
-                        result.get("token_name"),
-                        result.get("profit_sol", 0),
-                        result.get("roi_multiple", 1),
-                        logo_path=result.get("logo_path"),
-                        token_symbol=result.get("token_symbol"),
-                        sol_price_usd=result.get("sol_price_usd", 0),
-                    )
 
                 with open("minimal_card.png", "rb") as img:
                     await update.message.reply_photo(photo=img)
 
+                elapsed = round(time.time() - start_time, 1)
+                await update.message.reply_text(f"✅ Card generated in {elapsed}s")
                 await send_trending(update)
 
             except Exception as e:
@@ -409,10 +340,10 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "• SOL wallets start with a letter or number\n"
                     "• ETH wallets start with 0x\n\n"
                     "If the address is correct, try again in a minute — the server may be busy."
-            )
+                )
 
 # =========================
-# CALLBACK HANDLER (NEW)
+# CALLBACK HANDLER
 # =========================
 async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
@@ -440,35 +371,19 @@ async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
                 return
 
-            if chain == "eth":
-                create_eth_card(
-                    token_name=result.get("token_name"),
-                    wallet=wallet,
-                    tokens=result.get("net_position", 0),
-                    cost_usd=result.get("total_usd_spent", 0),
-                    value_usd=result.get("value_usd", 0),
-                    profit_usd=result.get("current_profit_usd", 0),
-                    roi=result.get("roi_multiple_usd", 0),
-                    logo_path="temp_logo.png",
-                    token_symbol=result.get("token_symbol"),
-                    buy_count=result.get("buys", 0),
-                    sell_count=result.get("sells", 0),
-                )
-            else:
-                create_card(
-                    result.get("token_name"),
-                    wallet,
-                    result.get("net_position", 0),
-                    result.get("cost_sol", 0),
-                    result.get("value_sol", 0),
-                    result.get("profit_sol", 0),
-                    result.get("roi_multiple", 1),
-                    logo_path=result.get("logo_path"),
-                    token_symbol=result.get("token_symbol"),
-                    buy_count=result.get("buys", 0),
-                    sell_count=result.get("sells", 0),
-                    sol_price_usd=result.get("sol_price_usd", 0),
-                )
+            create_card(
+                token_name=result.get("token_name"),
+                wallet=wallet,
+                tokens=result.get("net_position", 0),
+                cost_usd=result.get("total_usd_spent", 0),
+                value_usd=result.get("value_usd", 0),
+                profit_usd=result.get("current_profit_usd", 0),
+                roi=result.get("roi_multiple_usd", 0),
+                logo_path=result.get("logo_path") or "temp_logo.png",
+                token_symbol=result.get("token_symbol"),
+                buy_count=result.get("buys", 0),
+                sell_count=result.get("sells", 0),
+            )
 
             with open("position_card.png", "rb") as img:
                 await query.message.reply_photo(photo=img)
@@ -506,7 +421,7 @@ async def send_stats(update: Update):
 
 
 # =========================
-# TRENDING LOGIC (UPDATED)
+# TRENDING LOGIC
 # =========================
 async def send_trending(update: Update):
     top_wallets = get_top_wallets()
