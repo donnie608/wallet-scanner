@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from scanner import scan_wallet
-from image_card import create_minimal_card, create_minimal_eth_card
+from image_card import create_card, create_minimal_card, create_eth_card, create_minimal_eth_card
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -22,15 +22,24 @@ async def scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
         card_path = os.path.join(BASE_DIR, "position_card.png")
         with open(card_path, "rb") as img:
             await update.message.reply_photo(photo=img)
-        # Both chains now return USD values
-        response = (
-            f"🪙 {result['token_name']} (${result['token_symbol']})\n\n"
-            f"📊 {result['buys']} Buys | {result['sells']} Sells\n"
-            f"💰 Cost: ${result['total_usd_spent']}\n"
-            f"💵 Value: ${result['value_usd']}\n"
-            f"📈 Profit: ${result['current_profit_usd']}\n"
-            f"🚀 ROI: {result['roi_multiple_usd']}x"
-        )
+        if chain == "eth":
+            response = (
+                f"🪙 {result['token_name']} (${result['token_symbol']})\n\n"
+                f"📊 {result['buys']} Buys | {result['sells']} Sells\n"
+                f"💰 Cost: ${result['total_usd_spent']}\n"
+                f"💵 Value: ${result['value_usd']}\n"
+                f"📈 Profit: ${result['current_profit_usd']}\n"
+                f"🚀 ROI: {result['roi_multiple_usd']}x"
+            )
+        else:
+            response = (
+                f"🪙 {result['token_name']} (${result['token_symbol']})\n\n"
+                f"📊 {result['buys']} Buys | {result['sells']} Sells\n"
+                f"💰 Cost: {result['cost_sol']} SOL (${result['total_usd_spent']})\n"
+                f"💵 Value: {result['value_sol']} SOL\n"
+                f"📈 Profit: {result['profit_sol']} SOL\n"
+                f"🚀 ROI: {result['roi_multiple']}x"
+            )
         await update.message.reply_text(response)
     except Exception as e:
         import traceback
@@ -45,16 +54,25 @@ async def share(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         chain = "eth" if wallet.startswith("0x") else "sol"
         result = scan_wallet(wallet, chain=chain)
-        # Both chains now use the same minimal card with USD values
-        create_minimal_card(
-            token_name=result["token_name"],
-            profit_usd=result["current_profit_usd"],
-            roi=result["roi_multiple_usd"],
-            logo_path=result.get("logo_path") or "temp_logo.png",
-            token_symbol=result["token_symbol"],
-            avg_buy_price=result.get("avg_buy_price_usd", 0),
-            current_price=result.get("token_price_usd", 0),
-        )
+        if chain == "eth":
+            create_minimal_eth_card(
+                token_name=result["token_name"],
+                profit_usd=result["current_profit_usd"],
+                roi=result["roi_multiple_usd"],
+                logo_path="temp_logo.png",
+                token_symbol=result["token_symbol"],
+                avg_buy_price=result.get("avg_buy_price_usd", 0),
+                current_price=result.get("token_price_usd", 0),
+            )
+        else:
+            create_minimal_card(
+                token_name=result["token_name"],
+                profit=result["profit_sol"],
+                roi=result["roi_multiple"],
+                logo_path=result.get("logo_path"),
+                token_symbol=result["token_symbol"],
+                sol_price_usd=result["sol_price_usd"],
+            )
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         card_path = os.path.join(BASE_DIR, "minimal_card.png")
         with open(card_path, "rb") as img:
