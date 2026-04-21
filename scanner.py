@@ -547,8 +547,15 @@ def solana_scan(wallet):
     else:
         roi_multiple_usd = 0
 
-    # Legacy SOL-denominated values (kept for backward compat)
-    unrealized_profit = current_value_sol - net_cost
+    # SOL-denominated ROI (original formula, using spot price for value/recovered)
+    sol_total_spent_usd = sol_spent * sol_price_usd
+    sol_total_recovered_usd = sol_received * sol_price_usd
+    sol_current_value_usd = current_value_sol * sol_price_usd
+
+    if sol_total_spent_usd > 0:
+        roi_multiple = (sol_total_recovered_usd + sol_current_value_usd) / sol_total_spent_usd
+    else:
+        roi_multiple = 0
 
     print("\n" + "=" * 50)
     print("SOL WALLET SUMMARY")
@@ -563,32 +570,32 @@ def solana_scan(wallet):
     print("\n--- POSITION ---")
     print(f"Net Position: {round(net_position, 2)} tokens")
 
-    print("\n--- CAPITAL (USD) ---")
-    print(f"Total USD Spent: ${total_usd_spent:.2f}")
-    print(f"Total USD Recovered: ${total_usd_recovered:.2f}")
-    print(f"Break-Even Remaining: ${break_even_remaining_usd:.2f}")
-    print(f"Current Value: ${current_value_usd:.2f}")
+    print("\n--- CAPITAL ---")
+    print(f"SOL Spent: {round(sol_spent, 4)} (Historical USD: ${total_usd_spent:.2f})")
+    print(f"SOL Recovered: {round(sol_received, 4)} (Historical USD: ${total_usd_recovered:.2f})")
+    print(f"Net Cost: {round(net_cost, 4)}")
+    print(f"Current Value: {round(current_value_sol, 4)}")
 
-    print("\n--- PERFORMANCE (USD) ---")
-    print(f"Profit If Sold Now: ${current_profit_usd:.2f}")
-    print(f"ROI: {round(roi_multiple_usd, 2)}x")
+    print("\n--- PERFORMANCE ---")
+    print(f"PnL: {round(unrealized_profit, 4)} SOL")
+    print(f"ROI: {round(roi_multiple, 2)}x")
 
-    print(f"\nAvg Buy Price: ${avg_buy_price_usd:.6f}")
-    print(f"Token Price: ${round(price_usd, 6)}")
-    print(f"SOL Price: ${round(sol_price_usd, 2)}")
+    print(f"\nSOL Price: ${round(sol_price_usd, 2)}")
 
     create_card(
         token_name=token_name,
         wallet=wallet,
         tokens=round(net_position, 2),
-        cost_usd=round(total_usd_spent, 2),
-        value_usd=round(current_value_usd, 2),
-        profit_usd=round(current_profit_usd, 2),
-        roi=round(roi_multiple_usd, 2),
+        cost=round(net_cost, 4),
+        value=round(current_value_sol, 4),
+        profit=round(unrealized_profit, 4),
+        roi=round(roi_multiple, 2),
         logo_path=logo_path,
         token_symbol=token_symbol,
         buy_count=buy_count,
         sell_count=sell_count,
+        sol_price_usd=sol_price_usd,
+        cost_usd_historical=round(total_usd_spent, 2),
     )
 
     print("\n--- CARD GENERATED ---")
@@ -598,24 +605,20 @@ def solana_scan(wallet):
         "token_name": token_name,
         "token_symbol": token_symbol,
         "net_position": round(net_position, 2),
+        "cost_sol": round(net_cost, 4),
+        "value_sol": round(current_value_sol, 4),
+        "profit_sol": round(unrealized_profit, 4),
+        "roi_multiple": round(roi_multiple, 2),
         "buys": buy_count,
         "sells": sell_count,
         "transfers_in": transfer_in_count,
         "transfers_out": transfer_out_count,
-        "total_usd_spent": round(total_usd_spent, 2),
-        "total_usd_recovered": round(total_usd_recovered, 2),
-        "break_even_remaining_usd": round(break_even_remaining_usd, 2),
-        "value_usd": round(current_value_usd, 2),
-        "current_profit_usd": round(current_profit_usd, 2),
-        "roi_multiple_usd": round(roi_multiple_usd, 2),
-        "avg_buy_price_usd": round(avg_buy_price_usd, 8),
-        "token_price_usd": round(price_usd, 6),
         "sol_price_usd": sol_price_usd,
         "logo_path": logo_path,
-        # Legacy SOL values kept for backward compat
-        "cost_sol": round(net_cost, 4),
-        "value_sol": round(current_value_sol, 4),
-        "profit_sol": round(unrealized_profit, 4),
+        # Phase 1: historical USD values
+        "total_usd_spent": round(total_usd_spent, 2),
+        "total_usd_recovered": round(total_usd_recovered, 2),
+        "avg_buy_price_usd": round(avg_buy_price_usd, 8),
     }
 
 # =========================
